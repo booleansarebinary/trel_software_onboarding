@@ -1,25 +1,15 @@
 # TREL Software Onboarding
 
-A sandbox for practicing how we work, before you touch anything that matters.
+Welcome!
 
-It is a small, self-contained mirror of TREL's main monorepo: same build system,
-same test conventions, same shape of CI, with none of the scale. Four short
-exercises, each one a pull request. The code is throwaway; the habits are the
-point.
+We hope this repo gives you practice with the tools TREL Software uses so that when you get access to the repo, you hit the ground running.
 
-You do not need access to the main repo for any of this, and you will not be
-asked to open it. That access comes with your background check. This is how you
-spend the wait productively, so that when it clears you are not learning Bazel
-and the review process at the same time as a 50-package codebase.
+This should take around 2-4 hours to go through; if it takes much longer, please reach out! The goal is not to master these tools, but to become familiar with them.
 
-- **Read [Where This Code Lives](#where-this-code-lives) before you clone.** It
-  is short and it is the one section that is not optional.
-- **A fresh clone does not pass.** Exercises ship broken on purpose. Red is the
-  starting line, not a broken setup.
+As for AI Use: I would recommend trying to do these exercises without AI, so you develop the habit. Ask us for pointers instead; your team is here for you!
 
-**Budget 2-3 hours**, including the one-time toolchain download. Split it across
-sittings however you like. Ask questions early - that is expected, not a sign you
-are behind.
+- **Read [Where This Code Lives](#where-this-code-lives) before you clone.**
+- **A fresh clone does not pass.** Some of these exercises are broken on purpose for you to fix!
 
 **Contents:** [Where This Code Lives](#where-this-code-lives) · [Setup](#setup) ·
 [What Is In Here](#what-is-in-here) · [The Ladder](#the-ladder) · [Bazel](#bazel) ·
@@ -29,20 +19,12 @@ are behind.
 
 ## Where This Code Lives
 
-TREL software is export-controlled. These rules apply to the main repo, and to
-this sandbox too, because the habits you form here are the ones you keep. TREL's
-Technology Control Plan technically wants development to happen on TREL machines
-over SSH, and those machines are unreliable with several people on them. None of
-this is encouragement to work around the TCP - it is what makes working on a
-personal machine defensible rather than reckless.
+TREL software is export-controlled. So keep the following in mind when you get access to our main repo. Ideally, we should be sshing into the TREL PCs and developing on them, but we're not able to host our software on those computers, so this is our workaround.
 
-**1. Keep it on local disk.** Clone into a plain local directory:
-`mkdir -p ~/dev && cd ~/dev`. Not a network share, not a shared lab machine, not
-a cloud VM, not Codespaces. On macOS avoid `~/Documents` and `~/Desktop` even if
-iCloud looks off today - the moment anyone enables "Desktop & Documents Folders"
-sync, everything in them uploads. `~/dev` is never synced by default.
+**1. Keep the repo on your local disk.** Clone into a plain local directory:
+`mkdir -p ~/dev && cd ~/dev`. Don't do Documents/Desktop on your Mac or Windows (even if it's not currently in the Cloud), don't store it in iCloud or any cloud.
 
-**2. Encrypt that disk.** Verified, not assumed:
+**2. Encrypt your disk.**
 
 | Platform | Mechanism | Check it |
 | --- | --- | --- |
@@ -50,42 +32,20 @@ sync, everything in them uploads. `~/dev` is never synced by default.
 | Linux | LUKS / dm-crypt | `findmnt --target .` then `lsblk`, look for `crypt` |
 | WSL | BitLocker on the **Windows** host | `manage-bde -status C:` (admin PowerShell) |
 
-Use a real password and lock the machine after a few idle minutes. Encryption at
-rest does nothing against an unlocked laptop.
-
-**3. Do not put it in the cloud.** This is the one people get wrong by accident,
-because most of these are on by default. No syncing or backing up the repo to
-iCloud, Dropbox, Google Drive, OneDrive, Box, Backblaze, or similar - if you run
-one, exclude your source directory and confirm the exclusion applied. An
-*ITAR-compliant* cloud is fine; iCloud and your personal Google account are not.
-
-No mirroring the code anywhere else either: not github.com, not a personal
-GitLab, not a gist or pastebin. Same logic for AI tools - pasting this repo's
-throwaway exercise code into a chatbot is fine; doing the same with real TREL
-source, once you have it, means uploading export-controlled code to a third
-party. Ask what tooling is approved before you rely on it. And do not travel
-internationally with the machine while this code is on it.
+**3. Do not put it in the cloud.** Again, repeating this point because it's very important to meet ITAR regulations.
 
 **4. The Bazel cache counts too.** Bazel keeps an *output base* full of compiled
-copies of repo sources (`bazel info output_base`). It is as sensitive as the
-checkout, and big enough that people move it "somewhere with more space," which
-is occasionally a synced folder. Keep it local.
+copies of repo sources (`bazel info output_base`). SO this needs to be local too.
 
-**Check yourself:** `./dev_scripts/check_storage.sh` verifies the checkable
-parts - synced paths, disk encryption, output base location. `setup.sh` runs it
-for you. Passing does not make you compliant; failing means you are not.
-
-Not legal advice. The authoritative document is
-[NIST SP 800-171r3](https://csrc.nist.gov/pubs/sp/800/171/r3/final).
+**A note on AI use:** For now, leadership has okayed using AI to help code. In the future, when software becomes more maintenance work, we might be able to look into creating local models for TREL to use.
 
 ## Setup
 
 macOS or Linux. On Windows, use WSL.
 
-### Windows: WSL first
+### Windows: WSL
 
-Building this natively on Windows is not worth anyone's time. WSL2 gives you real
-Linux in about fifteen minutes.
+Our repo doesn't support Windows, so the workaround is WSL.
 
 1. In an **admin** PowerShell, then reboot when prompted:
    `wsl --install -d Ubuntu-24.04`
@@ -106,6 +66,8 @@ Linux in about fifteen minutes.
 
 If Bazel eats all your RAM, cap it in `C:\Users\<you>\.wslconfig` with
 `[wsl2]` and `memory=8GB`, then `wsl --shutdown` and reopen.
+
+Note: I don't have a Windows computer, so if you find that this does not accurately reflect your experience, make a PR to change the steps!
 
 ### macOS
 
@@ -137,14 +99,22 @@ rather than a password, so this way you type it once instead of every push.
 
 ### Then, everyone
 
-1. **Clone**, somewhere legal per the section above.
+1. **Clone** (somewhere locally).
 
 2. **Run `./dev_scripts/setup.sh`.** The first run downloads a Rust toolchain and
-   a full LLVM toolchain - a few minutes and a few GB, which buys you a build
-   that behaves identically on your laptop and in CI. Later runs take seconds.
+   a full LLVM toolchain that mimics the environment we use. It takes a few
+   minutes and a few GB the first time, then seconds after that.
+
+   A *toolchain* is the whole set of programs that turns source code into
+   something runnable: the compiler, the linker, and the standard library that
+   gets linked in. Bazel downloads a pinned one instead of using whatever
+   compiler happens to be on your laptop, which is what lets us promise the
+   build behaves the same everywhere. It is also where `clang-format` and
+   `clang-tidy` come from, so even the formatter is the same version for
+   everyone.
 
 3. **VS Code** with the Rust Analyzer, Bazel, and C/C++ extensions is optional,
-   but our tooling is built around it.
+   but it'll make your life easier.
 
 ## What Is In Here
 
@@ -158,7 +128,7 @@ cpp_exercises/      <- the two C++ exercises, after the Rust pair
 .github/workflows/  <- CI
 ```
 
-Read this file, then `rust_exercises/README.md`, then start on
+Finish reading this file, then read `rust_exercises/README.md`, then start on
 `rust_exercises/ex1_engineering_units/EXERCISE.md`.
 
 Every exercise has an `EXERCISE.md` with steps, a "Done when" list, and the things
@@ -168,7 +138,7 @@ the code. The sub-READMEs in `rust_exercises/`, `cpp_exercises/`, and
 
 ## The Ladder
 
-In order. Each one is one pull request.
+Create an individual pull request (PR) on a separate branch for every one of these.
 
 | Exercise | Time | You learn |
 | --- | --- | --- |
@@ -177,30 +147,50 @@ In order. Each one is one pull request.
 | `cpp_exercises/ex1_pressure_units` | 25 min | `cc_library`, `cc_test`, GoogleTest |
 | `cpp_exercises/ex2_format_and_tidy` | 20 min | A target that builds green and is still unmergeable |
 
-Do the Rust pair first; the testing habits transfer forward, the C++ mechanics do
-not transfer backward.
-
-If one of these runs well past its estimate, stop and ask. That is a tooling
-problem, not a you problem, and it is ours to fix.
-
-Python and TypeScript are used in real TREL software but are not covered here.
-The Bazel, PR, and testing habits transfer directly.
+If you find these exercises are taking you too long, stop and ask someone! It could be that there is an issue with the tools and not your code.
 
 ## Bazel
+Bazel is complicated, there's no doubt about it. But it's worth working with because it ensures compile-time consistency for every computer. So you never have the problem of "the rocket code works on my computer but not theirs." (Pretty dangerous when launching a rocket.)
 
-Bazel is the least familiar thing here for most people. The payoff: hermetic
-toolchains, so builds do not depend on what you have installed; caching, so
-rebuilds are fast; and an exact dependency graph, so CI knows what your change
-could have broken. [bazel.build](https://bazel.build/) has the long version, and
-the main repo has a whole document on why we accept the cost.
+A **build** is just compiling and linking source code into something usable - a
+library, an executable, a test binary. Nothing exotic.
 
-A **target** is something Bazel can build, named by a **label** like
-`//rust_exercises/ex1_engineering_units:tests` - a directory containing a
-`BUILD.bazel`, then a target name defined in it. `//foo/bar/...` means everything
-at or below that directory; `//...` is the whole repo. Bazel only sees what a
-`BUILD.bazel` declares, so a source file not listed in some `srcs` does not exist
-as far as Bazel is concerned. That is the trade: you write your dependencies down,
-and Bazel can answer questions about them.
+A **target** is one named unit of that work, declared in a `BUILD.bazel` file.
+The declaration says what kind of thing to produce, which source files go into
+it, and what it depends on. Here is the real one from exercise 1:
+
+```python
+rust_library(                       # produce a library
+    name = "engineering_units",     # call it this
+    srcs = glob(["src/**/*.rs"]),   # out of these files
+    edition = "2024",
+)
+
+rust_test(                          # produce a test binary
+    name = "tests",
+    crate = ":engineering_units",   # testing the library above
+    edition = "2024",
+    deps = ["@crates//:rstest"],    # which also needs rstest
+)
+```
+
+You refer to a target by its **label**: the path to the directory holding the
+`BUILD.bazel`, a colon, then the target name. So those two are
+`//rust_exercises/ex1_engineering_units:engineering_units` and
+`//rust_exercises/ex1_engineering_units:tests`. `//foo/bar/...` means every
+target at or below that directory, and `//...` is the whole repo.
+
+Why bother declaring all this instead of pointing a compiler at a folder?
+Because now Bazel knows the exact dependency graph. It can skip rebuilding
+anything whose inputs did not change, and CI can ask it "which targets could
+this PR have broken?" The cost is that Bazel only sees what a `BUILD.bazel`
+declares - a source file not listed in some `srcs` does not exist as far as
+Bazel is concerned, which is a confusing five minutes the first time it happens
+to you.
+
+
+
+The commands you'll use the most often are bazel build and bazel test.
 
 | Command | What it does |
 | --- | --- |
@@ -224,28 +214,26 @@ and Bazel can answer questions about them.
 | A target is missing from `//...` | It is tagged `manual` in its `BUILD.bazel`, which keeps it out of wildcards. |
 | Genuinely wedged | `bazel clean`. `--expunge` re-downloads every toolchain, so ask first. |
 
-Asking an AI for Bazel help? Say you use **bzlmod** (`MODULE.bazel`), not
-`WORKSPACE`, or you get confident, obsolete answers.
+One real gotcha when you look things up: Bazel has two generations of dependency
+config. The old one used a `WORKSPACE` file; the current one is called **bzlmod**
+and uses `MODULE.bazel`. This repo has no `WORKSPACE` file at all. Most Bazel
+answers you find online (and most AI answers) are written for `WORKSPACE`, and
+that syntax does nothing here - so say "bzlmod" when you search or ask.
 
 ## Git And Pull Requests
 
-Our GitHub has SSH disabled, so git uses HTTPS with a Personal Access Token as
-your password. Generate a fine-grained token at
-`https://trel-github.ae.utexas.edu/settings/personal-access-tokens`, scoped to
-the Texas-Rocket-Engineering-Laboratory org, with Metadata: read and Contents:
-read and write, and no organization permissions. Username is your EID, password
-is the token. If you set up the credential manager during setup, you enter it
-once. Treat the token like a password - never in a file, a commit, or a chat
-message.
+GitHub helps us track our code and changes. After pulling the code to your machine, create a branch of your own. You can make changes on this branch without touching the production code. When you're done with your branch, you can push it and create a PR for it. Again, if you have questions or concerns, please ask, we'd rather answer the same question twice than debug tooling :).
 
-**Never commit to `main`.** Always a branch, always a PR.
+Our main repo has a ticket system that should make this more intuitive.
+
+**Never commit to `main`.**
 
 | Command | What it does |
 | --- | --- |
 | `git status` | What changed and which branch you are on. Run it constantly. |
 | `git switch -c my-branch` | Create and switch to a branch |
 | `git diff` / `git diff --staged` | Unstaged changes / what you are about to commit |
-| `git add -p` | Stage hunk by hunk. Best habit on this list. |
+| `git add .` | Gets changes ready to be committed.
 | `git push -u origin my-branch` | Push a new branch and track it |
 | `git fetch origin` / `git rebase origin/main` | Update refs / replay your commits on current main |
 | `git push --force-with-lease` | Update a branch you rebased or amended, safely |
@@ -258,91 +246,46 @@ for.
 ### The loop
 
 ```bash
-git switch main && git fetch origin && git rebase origin/main
+git switch main && git pull
 git switch -c ex1-to-counts-tests
 
-# work, then run what you are about to ask someone to review
+# The -c stands for create. Omit it when switching to an existing branch.
+
+# Work, then run what you are about to ask someone to review
 ./dev_scripts/format.sh
 bazel test //rust_exercises/ex1_engineering_units:tests
 
-git add -p
-git commit
-git diff origin/main...HEAD   # read your own diff before anyone else does
+# . is for all files you touched, you can name specific files as wlel.
+git add .
+git commit -m "YOUR_COMMIT_MESSAGE_HERE"
+git diff origin/main...HEAD   # don't forget to check this step!
 git push -u origin ex1-to-counts-tests
 ```
 
 Then open the PR in the web UI and fill in the template. Open it as a **draft**
-if it is not ready - drafts do not ask for review or run the full CI suite.
-
-Reading your own diff is the step people skip and the one that pays. It catches
-the debug `println!`, the commented-out block, the file you did not mean to
-touch.
+if it is not ready but you want to ask someone questions.
 
 ### Commit messages
 
-Written for whoever is bisecting a regression in six months. Usually you.
+Keep them short and descriptive enough that if you have to go back to the version of the code at that commit, you understand what changed and what didn't. For example:
 
 ```
-Fix abort debounce not resetting on a false cycle
-
-run() incremented the consecutive-cycle counter when the condition held but
-never cleared it when it went false, so a flickering condition still fired
-once the total count reached min_cycles.
+Fixed graph on dashboard page to update immediately.
 ```
 
-First line imperative and under ~70 characters ("Fix X", not "Fixed X"), blank
-line, then what and **why** - the diff already shows how. One logical change per
-commit; `git add -p` makes that easy.
+If you stick around software engineers for long enough, you know that they have very strong opinions on code hygiene, commit messages, and seemingly insignificant details. We're trying to find a middle ground: detailed enough that we eliminate many small and careless bugs, but not so strict as to waste time.
 
 ### Keep PRs small
 
-One self-contained change: the codebase makes sense before it and after it. Big
-enough to mean something, small enough to follow in 15-30 minutes.
+This really helps your reviewer see your changes. Ideally, keep it to a few hundred lines of changes. (The ticketing system will make this easier because it will define your task for you.)
 
-Small PRs actually get reviewed, because nobody needs to find a free hour, and
-they are easy to revert. A reviewer who dislikes one piece of a 600-line PR holds
-up all 600 lines. This is the hardest professional habit to pick up - student
-projects never have reviewers - and the one your future coworkers will most
-appreciate you already having. The `PR Hygiene` workflow warns above 300 changed
-lines and fails above 600.
+You don't need to do it for this repo, but for our other repo, once you make a PR, send a message in the chat and link the PR. Someone should respond and start to review your PR.
 
-Review comments are about the code, not about you. Answer every one, even if the
-answer is "done." If you disagree, say so and say why - reviewers are wrong
-sometimes. Push fixes as new commits during review so the reviewer can see what
-changed. What you will most likely hear:
-
-- "This PR does three things. Split it."
-- "What happens when this is empty, zero, or missing?"
-- "There is no test for the branch you added."
-- "Would this test fail if the code were wrong? Show me."
-
-And the big one: **if the diff needs a verbal explanation, the PR is not ready.**
+In a month or so, you will be reviewing our PRs!
 
 ## CI
 
-Every non-draft PR triggers workflows, and they have to pass to merge.
-
-| Workflow | Does |
-| --- | --- |
-| `Rust Build & Lint, Test` | Builds affected Rust targets (which runs rustfmt and clippy), then tests them |
-| `C++ Build & Test` | Same, for `cc_*` targets |
-| `C++ Format & Tidy` | clang-format and clang-tidy on the C++ files your PR changed |
-| `PR Hygiene` | Checks the PR has a real description and is reviewable in one sitting |
-
-There is no separate Rust lint job on purpose: `.bazelrc` attaches the rustfmt and
-clippy aspects to every build, so a Rust build failure is as likely to be a
-formatting problem as a compile error - which you will have seen in exercise 1.
-
-**When it fails**, read the actual error in the failed step - usually the last 20
-lines, past the Bazel progress spam - then reproduce it locally with the same
-command. The build is hermetic, so if CI fails and your machine passes, suspect
-something you did not commit and check `git status`.
-
-**Affected targets.** The workflows do not build everything. They ask Bazel which
-targets your changed files could affect - `rdeps(all targets of that kind, files
-you changed)` - which is an answer rather than a guess. On a real monorepo that
-means a change to the shared message formats automatically tests the flight and
-ground software that consume them, with nobody maintaining a list.
+Don't worry about this too much now. It's a suite of automated tests that run whenever we want to merge something. It checks that the code won't break anything else.
 
 ## Formatting And Linting
 
@@ -367,22 +310,32 @@ free. `cpp_exercises/README.md` covers that.
 bazel build //...                 # this IS the Rust lint
 ```
 
-Both C++ tools come from the LLVM toolchain Bazel downloaded, so your output
-matches CI's exactly. Do not `brew install llvm` and use that instead -
-clang-format 18 and 20 disagree about real code, and the repo churns.
+**Do you have to run `format.sh` every time?** No, and it helps to separate two
+jobs here. *Checking* is automatic for Rust: `bazel build` runs rustfmt and clippy
+for you and fails if either is unhappy, so you cannot forget. `format.sh` is the
+**fixer** - you run it when the build tells you the formatting is off, because
+fixing whitespace by hand is a waste of your time. For C++ nothing in the build
+checks anything, so there you do need to run the scripts (or let CI catch it).
 
-Tools only catch mechanical problems. Reviewers check the rest: **YAGNI**,
-[**SOLID**](https://en.wikipedia.org/wiki/SOLID), **DRY**, **KISS**, and tests
-reaching about 90% coverage where reasonable.
+If you would rather not think about it at all, this repo ships a
+`.vscode/settings.json` that formats on save using these same pinned tools. Run
+setup once, reopen the folder in VS Code, and formatting stops being a step you
+remember.
+
+Both C++ tools come out of the LLVM toolchain Bazel downloads - `//tools:clang_format`
+and `//tools:clang_tidy` are clang-format and clang-tidy 20.1.7, the same binaries
+CI runs. That is on purpose: different major versions of clang-format format the
+same file differently, so if everyone used whatever their package manager gave
+them, we would get formatting-only diffs fighting each other in PRs. Use the
+scripts above rather than a `brew install llvm` copy.
 
 ## Writing A Good Test
 
-Why we care: so we know your code works, so we find out when someone else's
-change breaks it, and because tests document what a function should do. That last
-one matters more here than at a company - every year the most experienced people
-on this team graduate and take whatever they did not write down with them.
+Very very important! At one point (maybe even currently?) our codebase had more lines of code that was test code as opposed to feature code. It may seem excessive: tests in an MVP?
 
-The shape, lightly abbreviated from `rust_exercises/ex1_engineering_units`:
+And yes, we aren't trying to implement big production tests that might be found in the CD (continuous deployment). We're mostly focusing on unit tests and formatting checks. This ensures that when (not if) something breaks, we can pinpoint exactly where it is.
+
+Here's an example from `rust_exercises/ex1_engineering_units`:
 
 ```rust
 #[rstest]                                  // Always rstest, never #[test].
@@ -424,35 +377,9 @@ Full conventions: `rust_exercises/README.md`.
 
 ## Next Steps
 
-**When you are stuck, ask.** Everyone here had to learn all of this, and
-answering questions is how we find out which docs are wrong. Give it a bounded
-try first - say 30 minutes - then bring what you were trying to do, the exact
-command, the actual error pasted rather than paraphrased, and what you tried.
-That makes you answerable in one message instead of five. If you learn something
-that should have been written down, write it down - a PR against this README is a
-real contribution.
+Try giving the exercises a shot. And reach out with any questions!
 
-Once your four PRs are merged, tell whoever is onboarding you. When your
-background check clears you get access to the main monorepo, which has its own
-documentation to read then. What to expect there, so nothing surprises you:
-
-| | Here | The real repo |
-| --- | --- | --- |
-| Languages | Rust, a little C++ | Rust, Python, TypeScript; C++ in its own repo |
-| Scale | 4 packages | dozens, plus git submodules |
-| Rust targets | your machine | plus embedded flight boards and wasm |
-| CI runners | GitHub-hosted | self-hosted, ephemeral per run |
-| Bazel cache | local only | shared remote cache across the team |
-| Breaking `main` | harmless | you broke it for everyone |
-
-Everything else - the labels, the commands, the PR loop, the test style - is the
-same. That is the point of this repo.
-
-If you want more depth in the meantime: [the Rust Book](https://doc.rust-lang.org/book/),
+If you want more depth: [the Rust Book](https://doc.rust-lang.org/book/),
 [rstest's docs](https://docs.rs/rstest/), and
 [Bazel's guides](https://bazel.build/start).
 
-<sub>Maintainer note: if this repo moves onto TREL's GitHub Enterprise Server,
-the `runs-on:` lines in `.github/workflows/` need the self-hosted runner labels,
-since GHES has no GitHub-hosted runners. Each workflow file says what to
-change.</sub>

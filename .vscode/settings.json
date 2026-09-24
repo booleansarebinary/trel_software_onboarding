@@ -1,0 +1,46 @@
+{
+  // Formatting on save, using the SAME tools the build and CI use.
+  //
+  // This is here because "remember to run the formatter" is a bad plan. For
+  // Rust, `bazel build` already fails on unformatted code, so this just saves
+  // you the round trip. For C++ nothing in the build checks formatting at all,
+  // so this is the main thing keeping it clean.
+  //
+  // Run ./dev_scripts/setup.sh once before this works - the clang-format path
+  // below points at the binary Bazel downloads.
+  "editor.formatOnSave": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.formatOnSave": true
+  },
+
+  // clang-format from the pinned LLVM toolchain, not whatever is on your PATH.
+  // Different major versions format the same file differently, and we would
+  // rather not have formatting-only diffs fighting each other in PRs.
+  "C_Cpp.clang_format_path": "${workspaceFolder}/bazel-bin/tools/clang-format",
+  "C_Cpp.clang_format_style": "file",
+  "[cpp]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools",
+    "editor.formatOnSave": true
+  },
+  "[c]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools",
+    "editor.formatOnSave": true
+  },
+
+  // Bazel's symlinks contain a full copy of the build graph. Leaving them
+  // searchable makes "find in files" useless and pins a lot of memory.
+  "files.watcherExclude": {
+    "**/bazel-*/**": true
+  },
+  "search.exclude": {
+    "**/bazel-*": true
+  },
+  "files.associations": {
+    "*.bazel": "starlark",
+    ".bazelrc": "properties"
+  }
+}

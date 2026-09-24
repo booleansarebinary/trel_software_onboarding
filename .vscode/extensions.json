@@ -1,0 +1,10 @@
+{
+  // VS Code offers to install these when you open the folder. None are
+  // required; they just make the repo easier to work in.
+  "recommendations": [
+    "rust-lang.rust-analyzer",
+    "ms-vscode.cpptools",
+    "BazelBuild.vscode-bazel",
+    "github.vscode-github-actions"
+  ]
+}

@@ -31,9 +31,10 @@ echo "  bazel $(bazel --version 2>/dev/null | awk '{print $2}') (pinned: $(cat .
 echo
 
 echo "=== 3/4: fetching toolchains ==="
-echo "  First run downloads a Rust toolchain and a full LLVM toolchain."
-echo "  Expect several minutes and a few GB. This is the price of a build that"
-echo "  behaves the same on your laptop and in CI."
+echo "  First run downloads a Rust toolchain and a full LLVM toolchain: the"
+echo "  compilers, linker, and standard library this repo builds with, pinned to"
+echo "  one version so everyone gets identical builds."
+echo "  Expect several minutes and a few GB. Later runs take seconds."
 bazel build //tools:clang_format //tools:clang_tidy >/dev/null
 echo "  toolchains ready"
 echo
@@ -48,6 +49,13 @@ echo
 cat <<'MSG'
 Setup done.
 
-Next: read README.md end to end, then start with
+Next: finish reading README.md, then start on
 rust_exercises/ex1_engineering_units/EXERCISE.md.
+
+Tip: if you use VS Code, open this folder in it now. The .vscode/settings.json in
+this repo formats Rust and C++ on save using the same pinned tools the build and
+CI use, so formatting stops being something you have to remember.
+
+Anything confusing or broken here is worth telling us about - the docs are only
+good because people said what did not make sense.
 MSG

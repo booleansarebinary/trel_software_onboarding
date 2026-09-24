@@ -137,7 +137,8 @@ fi
 
 echo
 if [ "$FAILURES" -gt 0 ]; then
-    echo "$FAILURES check(s) failed. Fix these before you write any code."
+    echo "$FAILURES check(s) failed. Worth sorting out before you write code -"
+    echo "ask us if any of it is unclear."
     exit 1
 fi
 echo "Storage checks passed."
