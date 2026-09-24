@@ -29,8 +29,8 @@ This exercise is about reading.
    confirm your tests catch it. If they do not, your tests are not testing.
    Undo the sabotage.
 
-5. Format, then open a PR. See the "Making Your First PR" section of the
-   root README for the exact git commands.
+5. Format, then open a PR. The exact git commands are in the "Git And Pull
+   Requests" section of the root README.
 
    ```bash
    ./dev_scripts/format.sh

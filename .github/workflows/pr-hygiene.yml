@@ -44,7 +44,7 @@ jobs:
           echo "Lines changed (excluding lockfiles): $CHANGED"
           if [ "$CHANGED" -gt 600 ]; then
             echo "::error::$CHANGED changed lines is too big to review well."
-            echo "Split it. See the Pull Request Standards section of the README."
+            echo "Split it. See the Git And Pull Requests section of the README."
             exit 1
           fi
           if [ "$CHANGED" -gt 300 ]; then
