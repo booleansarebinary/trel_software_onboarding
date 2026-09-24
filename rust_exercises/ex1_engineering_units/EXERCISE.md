@@ -1,58 +1,91 @@
-# Exercise 1: Read the code, then test it
+# Rust Exercise 1: Build it, clean it, implement it, test it
 
-**Goal:** get Bazel working, learn what a test looks like here, and write your
-first PR.
+**About 45 minutes.** Everything you need for your first PR: get Bazel working,
+meet the formatter and the linter, write a little Rust, and write tests.
 
-**You will not write any implementation code.** `EngineeringUnit` is finished.
-This exercise is about reading.
+## 1. Try to build it. It fails.
 
-## Steps
+```bash
+bazel build //rust_exercises/ex1_engineering_units:engineering_units
+```
 
-1. Build it, then test it:
+The error is a **diff**, not a compile error. That is `rustfmt`: our `.bazelrc`
+wires the formatter into every build, so badly formatted Rust does not compile
+here. Fix it with the formatter rather than by hand:
 
-   ```bash
-   bazel build //rust_exercises/ex1_engineering_units:engineering_units
-   bazel test //rust_exercises/ex1_engineering_units:tests
-   ```
+```bash
+./dev_scripts/format.sh
+```
 
-   Notice how long the build took the first time and how long it takes the
-   second time. That difference is the Bazel cache, and it is most of the
-   reason we put up with Bazel.
+## 2. Build again. Now the linter complains.
 
-2. Read `src/lib.rs` top to bottom, including the comments. Read the two
-   existing tests twice.
+Three findings from `clippy`, all in `channel_label`. Clippy findings are hard
+errors in this repo, not warnings. Fix them **by hand**, reading each message -
+the point is that you recognize these patterns in your own code later:
 
-3. Write the four tests described in the `TODO(you)` block at the bottom of the
-   file. Run them.
+- **`ptr_arg`** - `&String` where `&str` would do. The function only reads the
+  string, so taking `&String` forces every caller to own a `String` first. This
+  is a habit people carry for years; break it now.
+- **`len_zero`** - `.len() == 0` should be `.is_empty()`.
+- **`needless_return`** - the last expression in a Rust function is its return
+  value. `return` on that line is noise.
 
-4. Do the sabotage check the TODO describes: break `to_counts` on purpose and
-   confirm your tests catch it. If they do not, your tests are not testing.
-   Undo the sabotage.
+Each message links to an explanation. Read at least one of them.
 
-5. Format, then open a PR. The exact git commands are in the "Git And Pull
-   Requests" section of the root README.
+Do not add `#[allow(...)]`. Silencing a linter needs a reason in a comment, and
+none of these have one.
 
-   ```bash
-   ./dev_scripts/format.sh
-   bazel test //rust_exercises/ex1_engineering_units:tests
-   ```
+## 3. Read the code.
+
+`src/lib.rs`, top to bottom, comments included. Read the three existing tests
+twice - they are the style you are held to.
+
+Then build and run the tests to see where you stand:
+
+```bash
+bazel test //rust_exercises/ex1_engineering_units:tests
+```
+
+## 4. Implement `to_counts`.
+
+Its doc comment lists four behaviors. Get all four. `to_counts` returns
+`Option<u16>` rather than `u16` - make sure you understand why before you start.
+
+Delete the `let _ = (value, MIN_COUNTS, MAX_COUNTS);` line when you do.
+
+## 5. Write the tests.
+
+The `TODO(you)` block at the bottom of the file lists them: one test per code
+path of `to_counts`, plus one for `channel_label` with a non-empty prefix.
+
+Then do the sabotage check the TODO describes - break your own code on purpose
+and confirm your tests notice. If they do not, they are decoration.
+
+## 6. Open the PR.
+
+```bash
+./dev_scripts/format.sh
+bazel test //rust_exercises/ex1_engineering_units:tests
+```
+
+Then follow the loop in the "Git And Pull Requests" section of the root README.
 
 ## Done when
 
-- Four new tests, one per code path of `to_counts`.
+- `bazel build //...` and `bazel test //...` pass for this package.
+- `to_counts` handles all four cases, with one test per case.
 - Every test uses `#[rstest]`, is named
   `test_<function>_<behavior>[_when_<condition>]`, and has setup / call /
   assertions separated by blank lines.
 - Nothing in `mod tests` is `pub`.
-- You can say, out loud, why `to_counts` returns `Option<u16>` rather than
-  `u16`.
+- No `#[allow(...)]` anywhere.
 
-## Things that will trip you up
+## Things that trip people up
 
-- **`bazel build` fails and the error is a diff, not a compile error.** That is
-  rustfmt. Run `./dev_scripts/format.sh`.
-- **`bazel build` fails with a clippy suggestion.** Clippy findings are hard
-  errors here, not warnings. Fix them; the message almost always contains the
-  fix.
+- **A build error that is a diff** is the formatter. `./dev_scripts/format.sh`.
+- **A build error suggesting better code** is clippy. Fix it; the message
+  usually contains the fix.
 - **You changed a file and Bazel says nothing changed.** You are probably
   building a different target than you think. Check the label.
+- **Your test will not re-run.** Bazel cached the result. Add
+  `--nocache_test_results`.

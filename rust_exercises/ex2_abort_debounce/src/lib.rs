@@ -1,8 +1,7 @@
 //! Debounced abort evaluation.
 //!
-//! This is a cut-down model of real ground software:
-//! `//ground_software/hardware_control/src/aborts/abort_operator.rs` in trel3.
-//! Same problem, same structure, none of the expression engine.
+//! This is a cut-down model of the real ground software abort operator: same
+//! problem, same structure, none of the expression engine.
 //!
 //! # The problem
 //!
@@ -382,8 +381,7 @@ mod tests {
     // your PR diff, that the test actually catches the bug. A test written
     // after the fix passes on the first run and demonstrates nothing.
     //
-    // When you are done, read the real version of this test in trel3:
-    // ground_software/hardware_control/src/aborts/abort_operator.rs, search
-    // for `discontinuous_min_cycles`.
+    // The real ground software has a test with very nearly this name, against
+    // a full expression engine. You will recognize it when you get there.
     // ------------------------------------------------------------------
 }

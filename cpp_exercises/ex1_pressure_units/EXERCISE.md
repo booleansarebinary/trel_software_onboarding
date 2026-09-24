@@ -1,5 +1,7 @@
 # C++ Exercise 1: cc_library, cc_test, GoogleTest
 
+**About 25 minutes.**
+
 **Goal:** implement two functions and test them with GoogleTest.
 
 ```bash

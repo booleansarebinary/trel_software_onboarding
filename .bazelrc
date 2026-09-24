@@ -20,4 +20,9 @@ build:macos --@toolchains_llvm//toolchain/config:libunwind=False
 # Show us the failing test's output instead of making you go hunting for a log.
 test --test_output=errors
 
+# Keep going after a failure instead of stopping at the first one. This repo
+# ships with exercises deliberately broken, so `bazel test //...` should tell
+# you about ALL of them rather than hiding exercise 2 behind exercise 1.
+test --keep_going
+
 try-import %workspace%/.bazelrc.user

@@ -1,16 +1,18 @@
 """
 MODULE file for the TREL software onboarding sandbox.
 
-This is a deliberately small mirror of //trel3's MODULE.bazel. Read that file
-once you finish here - it is the same shape, just with Python, TypeScript,
-Flatbuffers, embedded toolchains, and a hundred crates on top.
+A deliberately small version of the main repo's MODULE.bazel - same shape, just
+without Python, TypeScript, Flatbuffers, embedded toolchains, and a hundred
+crates on top.
 
-Two rules carried over from trel3 that matter to you:
+Two conventions here that carry over, and that matter to you:
 
-1. Dependencies are declared HERE, repo-wide, not per-package. A package
-   opts in to an already-declared dependency in its own BUILD.bazel.
-   See "Why External Dependencies are Specified Repo-Wide" in trel3's
-   README.bazel.md for the reasoning.
+1. Dependencies are declared HERE, repo-wide, not per-package. A package opts
+   in to an already-declared dependency in its own BUILD.bazel. The reason:
+   packages in a monorepo depend on each other, so two packages wanting
+   different versions of the same crate is a conflict waiting to happen. It
+   also means most people never need to make a dependency decision - the
+   answer is usually already declared.
 2. We use bzlmod (this file), not WORKSPACE. If you ask an AI for Bazel help,
    tell it you are on bzlmod or it will confidently hand you WORKSPACE syntax
    that does nothing.
@@ -49,8 +51,7 @@ use_repo(llvm, "llvm_toolchain", "llvm_toolchain_llvm")
 
 register_toolchains("@llvm_toolchain//:all")
 
-# C++ test framework. trel3 has a standing TODO to wire this up; here it is
-# already done so that you have something to write assertions with.
+# C++ test framework, so you have something to write assertions with.
 bazel_dep(name = "googletest", version = "1.17.0")
 
 # ---------------------------------------------------------------------------
@@ -62,8 +63,9 @@ RUST_EDITION = "2024"
 
 RUST_VERSION = "1.95.0"
 
-# trel3 also builds for thumbv7em (the scopium boards) and wasm32. You do not
-# need those to learn the language, so this repo sticks to host platforms.
+# The main repo also builds for thumbv7em (the scopium flight boards) and
+# wasm32. You do not need those to learn the language, so this repo sticks to
+# whatever machine you are on.
 RUST_TARGET_PLATFORMS = [
     "aarch64-apple-darwin",
     "x86_64-apple-darwin",
@@ -83,8 +85,8 @@ register_toolchains("@rust_toolchains//:all")
 
 crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 
-# There is no Cargo.toml in this repo, and there is none in trel3 either.
-# Bazel resolves crates from the specs below. Version numbers match trel3.
+# There is no Cargo.toml in this repo, and there is none in the main repo
+# either. Bazel resolves crates from the specs below.
 crate.spec(
     # The crate-name feature breaks under Bazel, hence default_features = False.
     default_features = False,

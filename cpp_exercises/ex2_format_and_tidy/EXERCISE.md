@@ -1,5 +1,7 @@
 # C++ Exercise 2: Green does not mean good
 
+**About 20 minutes.**
+
 **Goal:** see for yourself that a C++ target can pass its build and its tests
 while being unmergeable.
 
@@ -19,7 +21,7 @@ complaint. Now run the tools Bazel does not run:
 
 Nine formatting violations and eight clang-tidy findings.
 
-Compare that to Rust exercise 4, where the equivalent mess makes `bazel build`
+Compare that to Rust exercise 1, where the equivalent mess made `bazel build`
 fail outright. Same class of problem, completely different safety net. **In C++,
 you and your reviewer are the safety net.**
 

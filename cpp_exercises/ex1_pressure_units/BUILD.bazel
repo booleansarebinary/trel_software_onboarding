@@ -1,5 +1,5 @@
 # Bazel 8 wants C++ rules loaded explicitly rather than relying on the legacy
-# native globals. Some older BUILD files in trel3 still use the bare names.
+# native globals. Older BUILD files elsewhere may still use the bare names.
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 package(default_visibility = ["//visibility:public"])

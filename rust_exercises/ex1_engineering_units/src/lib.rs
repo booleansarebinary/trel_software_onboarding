@@ -8,17 +8,14 @@
 //! value = counts * scale + offset
 //! ```
 //!
-//! trel3 has a real, generic version of this type at `//lib_rust/engineering_units`.
-//! This is a simplified copy so you have something small to read.
-//!
 //! # Rust notes for this file
 //!
 //! - `pub` is per-item. Anything without `pub` is private to this module, and
-//!   the compiler will tell you about it rather than letting you guess.
+//!   the compiler tells you rather than letting you guess.
 //! - `#[derive(...)]` asks the compiler to write boilerplate trait impls.
-//!   `Copy` here means this struct is cheap enough to duplicate on assignment
-//!   instead of being moved, which is why the methods below can take `&self`
-//!   and callers never have to think about ownership.
+//!   `Copy` here means the struct is cheap enough to duplicate on assignment
+//!   instead of being moved, which is why these methods take `&self` and
+//!   callers never have to think about ownership.
 //! - Returning `Option<T>` instead of panicking is how Rust says "this can
 //!   legitimately have no answer." The caller is forced to handle it.
 
@@ -47,8 +44,7 @@ impl EngineeringUnit {
     /// Builder-style setter, so call sites read as one expression:
     /// `EngineeringUnit::new(0.1, -10.0).with_value(250.0)`.
     ///
-    /// Takes `self` by value and returns it. This is a common Rust idiom and
-    /// you will see it all over trel3.
+    /// Takes `self` by value and returns it. This is a common Rust idiom.
     pub fn with_value(mut self, value: f64) -> Self {
         self.value = value;
         self
@@ -66,28 +62,42 @@ impl EngineeringUnit {
 
     /// Converts an engineering value back into raw counts for a DAC.
     ///
-    /// Returns `None` when this channel has no usable calibration, because
-    /// inverting a zero scale is a division by zero, and silently handing the
-    /// hardware a garbage setpoint is how valves end up in the wrong state.
+    /// Four behaviors to get right:
     ///
-    /// Values outside the DAC's range saturate rather than wrap. A wrapped
-    /// setpoint would turn "slightly too high" into "fully closed".
+    /// 1. A value in range converts to the nearest whole count. Round, do not
+    ///    truncate.
+    /// 2. A value below the DAC range saturates to 0.
+    /// 3. A value above the DAC range saturates to `u16::MAX`. Saturate, never
+    ///    wrap - a wrapped setpoint turns "slightly too high" into "fully
+    ///    closed", which is how valves end up in the wrong state.
+    /// 4. A channel with no usable calibration (`scale == 0.0`) returns `None`,
+    ///    because inverting a zero scale is a division by zero and silently
+    ///    handing the hardware a garbage setpoint is not an option.
+    ///
+    /// Use `MIN_COUNTS` and `MAX_COUNTS` above.
+    ///
+    /// TODO(you): implement.
     pub fn to_counts(&self, value: f64) -> Option<u16> {
-        if self.scale == 0.0 {
-            return None;
-        }
-
-        let raw = (value - self.offset) / self.scale;
-
-        if raw < MIN_COUNTS {
-            return Some(0);
-        }
-        if raw > MAX_COUNTS {
-            return Some(u16::MAX);
-        }
-
-        Some(raw.round() as u16)
+        // This line only exists so the unimplemented stub compiles without
+        // "unused" errors. Delete it when you implement the function.
+        let _ = (value, MIN_COUNTS, MAX_COUNTS);
+        todo!("ex1: implement EngineeringUnit::to_counts")
     }
+}
+
+/// Builds the display label for a channel, like "ai_12". Labels are lowercase
+/// by convention, so the prefix is normalized.
+///
+/// This function works. It is also formatted badly and written in a way clippy
+/// objects to, on purpose. See EXERCISE.md.
+pub fn channel_label(prefix:&String,id:u16)->String{
+    if prefix.len()==0{
+        return String::from("unknown");
+    }
+    let mut label=prefix.to_lowercase();
+    label.push('_');
+    label.push_str(&id.to_string());
+    return label;
 }
 
 #[cfg(test)]
@@ -99,7 +109,7 @@ mod tests {
     const EPSILON: f64 = 1e-9;
 
     // ------------------------------------------------------------------
-    // READ THESE TWO TESTS CAREFULLY. They are the house style.
+    // READ THESE TESTS CAREFULLY. They are the house style.
     //
     // Note four things:
     //
@@ -109,7 +119,7 @@ mod tests {
     //    A reviewer should know what broke from the failure name alone,
     //    without opening the file.
     // 3. Three blocks separated by ONE blank line: setup, the single call
-    //    under test, then assertions. This is enforced in review.
+    //    under test, then assertions. This is checked in review.
     // 4. `#[case(...)]` adds test cases without duplicating the test body.
     //    Each case is reported as its own test, so a failure tells you which
     //    input broke.
@@ -139,23 +149,45 @@ mod tests {
         assert!((channel.value() - 250.0).abs() < EPSILON);
     }
 
+    /// One test for `to_counts` to get you started, and to keep the exercise
+    /// honest: it fails inside `todo!()` until you implement the function.
+    #[rstest]
+    fn test_to_counts_returns_none_when_the_channel_is_uncalibrated() {
+        let channel = EngineeringUnit::default();
+
+        let counts = channel.to_counts(100.0);
+
+        assert_eq!(counts, None);
+    }
+
+    #[rstest]
+    fn test_channel_label_returns_unknown_when_the_prefix_is_empty() {
+        let prefix = String::new();
+
+        let label = channel_label(&prefix, 12);
+
+        assert_eq!(label, "unknown");
+    }
+
     // ------------------------------------------------------------------
-    // TODO(you): `to_counts` has four distinct code paths and zero tests.
+    // TODO(you): `to_counts` has four code paths and one test.
     //
-    // Write one test per path. Follow the naming and layout above. Do not
-    // write one giant test with four assertion groups in it - when that test
-    // fails, the failure tells your reviewer nothing.
+    // Write the missing three, following the naming and layout above. Do not
+    // write one giant test with three assertion groups - when that test fails,
+    // the failure tells your reviewer nothing.
     //
-    //   1. A value inside the DAC range converts back to the right counts.
-    //      Use `#[case]` for at least three values, including a value that
-    //      has to round.
-    //   2. A value below the range saturates to 0 (not to a wrapped number).
+    //   1. A value inside the DAC range converts to the right counts. Use
+    //      `#[case]` for at least three values, including one that has to
+    //      round.
+    //   2. A value below the range saturates to 0.
     //   3. A value above the range saturates to u16::MAX.
-    //   4. An uncalibrated channel (scale == 0.0) returns None.
+    //   (4. Uncalibrated channel returns None - already written above.)
     //
-    // Sanity check on your own work before you open the PR: comment out the
-    // `if self.scale == 0.0` guard in `to_counts`. If every test still
-    // passes, your tests are decoration, not verification. Put the guard
-    // back afterward.
+    // Also add one test for `channel_label` with a non-empty prefix. There is
+    // only one above and it covers the empty case.
+    //
+    // Sanity check your own work before opening the PR: comment out the
+    // `scale == 0.0` guard in your `to_counts`. If every test still passes,
+    // your tests are decoration, not verification. Put the guard back.
     // ------------------------------------------------------------------
 }

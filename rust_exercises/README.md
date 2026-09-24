@@ -1,15 +1,13 @@
 # Rust Exercises
 
-Four exercises, in order. Each one ends in a pull request.
+Two exercises, about 45 minutes each. Each one ends in a pull request.
 
 | # | Directory | What you do | What it teaches |
 | --- | --- | --- | --- |
-| 1 | `ex1_engineering_units/` | Add tests to finished code | Bazel basics, what a test looks like here, your first PR |
-| 2 | `ex2_sensor_limits/` | Implement three functions and test them | Enums, `match`, `Result`, borrowed slices |
-| 3 | `ex3_abort_debounce/` | Write a test that exposes a real bug, then fix it | The habit that matters most; rstest fixtures |
-| 4 | `ex4_lint_cleanup/` | Clean up code the tooling rejects | rustfmt, clippy, and the `manual` tag |
+| 1 | `ex1_engineering_units/` | Fix what the tooling rejects, implement a function, test it | Bazel, rustfmt, clippy, `Option`, house test style, your first PR |
+| 2 | `ex2_abort_debounce/` | Write a test that exposes a real bug, then fix it | The habit that matters most; enums, `Result`, rstest fixtures |
 
-**Do them in order.** Each one assumes the previous one.
+**Do them in order.** The second assumes the first.
 
 ## Why Rust
 
@@ -22,11 +20,14 @@ data race.
 
 Fighting the borrow checker is normal for the first week. It is not a hazing
 ritual; it is a class of bug being caught at compile time instead of during a
-hotfire.
+hotfire. If you want background reading,
+[the Rust Book](https://doc.rust-lang.org/book/) chapters 4, 6, and 9 cover
+ownership, enums and pattern matching, and error handling - about an hour, and it
+will save you three.
 
 ## Conventions you are expected to follow
 
-These come from trel3's `README.testing.md` and are enforced in review.
+These are the conventions used in the main repo, and they are enforced in review.
 
 - **`#[rstest]` on every test, never `#[test]`.** Every Rust test in TREL uses
   [rstest](https://crates.io/crates/rstest).
@@ -52,9 +53,9 @@ files here.
 
 ## Dependencies
 
-There is no `Cargo.toml` in this repo, and there is none in trel3 either. Crates
-are declared once in `MODULE.bazel` with `crate.spec(...)` and referenced from a
-`BUILD.bazel` as `@crates//:rstest`.
+There is no `Cargo.toml` in this repo, and there is none in the main repo
+either. Crates are declared once in `MODULE.bazel` with `crate.spec(...)` and
+referenced from a `BUILD.bazel` as `@crates//:rstest`.
 
 If you need a crate that is not declared yet: that is a conversation, not a
 one-line change. A new dependency becomes the org-wide answer to whatever

@@ -2,9 +2,8 @@
 # Narrows a list of Bazel targets down to the ones a set of changed files can
 # actually affect.
 #
-# This is a simplified copy of the script by the same name in trel3. Read that
-# one once you have this one straight - it is the same idea with a remote cache
-# and --config=ci attached.
+# A simplified version of the script the main repo uses, which does the same
+# thing with a shared remote cache attached.
 #
 # Usage:
 #   compute_affected_targets <TARGETS> <CHANGED_FILES> <OUTPUT_VAR>

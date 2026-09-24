@@ -9,10 +9,9 @@ Small scripts so you do not have to memorize tool invocations.
 | `format.sh` | Formats all Rust and C++. `--check` reports without rewriting. |
 | `lint_cpp.sh` | Runs clang-tidy over C++ sources with the right compile flags. |
 
-trel3's equivalent directory does considerably more - git submodules, the mold
-linker, `rust-project.json` generation for rust-analyzer, pnpm installs, and VS
-Code tasks that run some of it automatically. Read
-`//dev_scripts/README.md` over there when you get to it.
+The main repo's equivalent directory does considerably more - git submodules,
+the mold linker, `rust-project.json` generation for rust-analyzer, pnpm
+installs, and VS Code tasks that run some of it automatically.
 
 ## Notes
 

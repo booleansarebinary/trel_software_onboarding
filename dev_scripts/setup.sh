@@ -2,8 +2,8 @@
 # One-time setup for this repo. Idempotent - run it again whenever something
 # feels off.
 #
-# The real repo's equivalent is //dev_scripts/trel_setup.sh in trel3, which
-# does considerably more (submodules, the mold linker, pinned Bazel).
+# The main repo has a bigger version of this that also handles git submodules,
+# the mold linker, and more.
 
 set -euo pipefail
 
@@ -41,6 +41,7 @@ echo
 echo "=== 4/4: baseline ==="
 echo "  Building and testing everything. Exercises you have not done yet are"
 echo "  EXPECTED to fail - that is the assignment, not a broken setup."
+echo "  Rust exercise 1 fails to BUILD on purpose; that is its first step."
 echo
 bazel test //... || true
 echo

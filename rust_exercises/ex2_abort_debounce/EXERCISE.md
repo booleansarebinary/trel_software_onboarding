@@ -1,17 +1,19 @@
-# Exercise 3: Find the bug with a test
+# Rust Exercise 2: Find the bug with a test
+
+**About 45 minutes.**
 
 **Goal:** the single most valuable habit in this repo. Write the test that
 proves a bug exists, watch it fail, then fix the code.
 
-This is a cut-down model of real ground software:
-`//ground_software/hardware_control/src/aborts/abort_operator.rs` in trel3.
+This is a cut-down model of real ground software - the abort operator that
+watches for redline conditions during a test and drives valves to a safe state.
 
 ## The setup
 
 Run the tests. Three pass:
 
 ```bash
-bazel test //rust_exercises/ex3_abort_debounce:tests
+bazel test //rust_exercises/ex2_abort_debounce:tests
 ```
 
 The code has a bug anyway. `min_cycles` is supposed to mean the abort condition
@@ -49,17 +51,17 @@ you.
 
 ## Done when
 
-- `bazel test //rust_exercises/ex3_abort_debounce:tests` is green with 10
+- `bazel test //rust_exercises/ex2_abort_debounce:tests` is green with 10
   passing cases: 7 from the three existing tests, 3 from your new one. Before
   your fix it should read 7 passed, 3 failed.
 - Your PR has two commits in that order, and the description says what the bug
   was in one sentence.
 - Reverting only your one-line fix makes only your new test fail.
 
-## Then go read the real thing
+## Why this one matters
 
-In trel3, open
-`ground_software/hardware_control/src/aborts/abort_operator.rs` and find
-`test_abort_config_does_not_issue_response_after_discontinuous_min_cycles`.
-Same test, against the real expression engine. You now understand production
-flight-adjacent code, which is the entire objective of this onboarding.
+The real ground software has this same abort operator, this same `min_cycles`
+debounce, and a test with very nearly the name you just wrote - against a full
+expression engine instead of two hardcoded comparisons. When you get access to
+the main repo, that code will not be a mystery. That is the whole objective of
+this onboarding.

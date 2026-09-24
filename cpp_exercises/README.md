@@ -3,7 +3,7 @@
 ## Why there is C++ here at all
 
 New TREL software is Rust, Python, or TypeScript. C++ is not on that list, and
-the C++ that exists lives in **its own separate repository**, not in trel3.
+the C++ that exists lives in **its own separate repository**.
 
 You are doing these two exercises so that the first time you open that repo, the
 mechanics are not new. Two short exercises, not a language course. If you end up
@@ -21,7 +21,7 @@ This is the difference worth carrying with you.
 | Config | none checked in; rustfmt defaults | `.clang-format` and `.clang-tidy` at the repo root |
 
 In Rust, `bazel build` failing on a formatting diff is not an inconvenience, it
-is the feature. In C++ you get no such help:
+is the feature - you saw that in Rust exercise 1. In C++ you get no such help:
 
 ```bash
 ./dev_scripts/format.sh --check   # clang-format, reports and fails
@@ -51,8 +51,8 @@ enough to pass them explicitly, and doing it in the open shows you what is
 actually going on.
 
 **Bazel 8 wants explicit rule loads.** `load("@rules_cc//cc:defs.bzl",
-"cc_library", "cc_test")` at the top of the `BUILD.bazel`. Some older files in
-trel3 still rely on the legacy native globals.
+"cc_library", "cc_test")` at the top of the `BUILD.bazel`. Older files elsewhere
+may still rely on the legacy native globals.
 
 **Tests are a separate translation unit.** No `mod tests`, no access to private
 members. You test through the public header, which is a decent argument for
@@ -60,10 +60,10 @@ keeping headers small. We use GoogleTest.
 
 ## The exercises
 
-| # | Directory | What it teaches |
-| --- | --- | --- |
-| 1 | `ex1_pressure_units/` | `cc_library`, `cc_test`, GoogleTest, float assertions |
-| 2 | `ex2_format_and_tidy/` | A target that builds green and is still unacceptable |
+| # | Directory | About | What it teaches |
+| --- | --- | --- | --- |
+| 1 | `ex1_pressure_units/` | 25 min | `cc_library`, `cc_test`, GoogleTest, float assertions |
+| 2 | `ex2_format_and_tidy/` | 20 min | A target that builds green and is still unacceptable |
 
-Do Rust exercises 1-3 first. The testing habits transfer; the C++ mechanics do
+Do both Rust exercises first. The testing habits transfer; the C++ mechanics do
 not transfer backwards.

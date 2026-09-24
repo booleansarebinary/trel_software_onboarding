@@ -8,7 +8,7 @@ gave them, the repo churns. These targets guarantee you, your reviewer, and
 CI all run byte-identical binaries.
 
 Usage (the `--run_under` trick puts the tool in YOUR directory instead of
-Bazel's sandbox, which is the same incantation trel3 documents for ruff):
+Bazel's sandbox):
 
     bazel run --run_under="cd $PWD &&" //tools:clang_format -- -i path/to/file.cc
     bazel run --run_under="cd $PWD &&" //tools:clang_tidy -- path/to/file.cc

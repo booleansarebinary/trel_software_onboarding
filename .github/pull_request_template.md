@@ -11,14 +11,14 @@ Delete any section that genuinely does not apply, and say why in one line.
 
 ## Why
 
-<!-- The motivation. "Exercise 3" is a fine answer in this repo. In trel3, link
-     the issue or explain the problem you hit. -->
+<!-- The motivation. "Rust exercise 2" is a fine answer in this repo. On a real
+     repo, link the issue or explain the problem you hit. -->
 
 ## How I verified it
 
 <!-- The commands you ran and what happened. For example:
 
-     bazel test //rust_exercises/ex3_abort_debounce:tests
+     bazel test //rust_exercises/ex2_abort_debounce:tests
      -> 10 tests pass (was 7 pass / 3 fail before the fix in commit 2)
 
      "CI is green" is not verification. CI runs what you told it to run. -->
