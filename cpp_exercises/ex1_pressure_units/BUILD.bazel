@@ -1,0 +1,27 @@
+# Bazel 8 wants C++ rules loaded explicitly rather than relying on the legacy
+# native globals. Some older BUILD files in trel3 still use the bare names.
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "pressure_units",
+    srcs = ["src/pressure_units.cc"],
+    hdrs = ["include/pressure_units.h"],
+    # `includes` adds this directory to the include path of this target AND of
+    # everything that depends on it, which is why the test can write
+    # #include "pressure_units.h" instead of a long relative path.
+    includes = ["include"],
+)
+
+# Unlike Rust, C++ tests live in their own translation unit. There is no
+# `mod tests` and no access to private members, so you test through the public
+# header - which is a decent argument for keeping headers small.
+cc_test(
+    name = "tests",
+    srcs = ["tests/pressure_units_test.cc"],
+    deps = [
+        ":pressure_units",
+        "@googletest//:gtest_main",
+    ],
+)

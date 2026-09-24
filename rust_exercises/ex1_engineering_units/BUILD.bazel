@@ -1,0 +1,21 @@
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# In Rust, unit tests live in the SAME FILE as the code they test, inside a
+# `mod tests`. That is why there is no separate test source file here and why
+# the rust_test below takes `crate = ":engineering_units"` instead of `srcs`.
+rust_library(
+    name = "engineering_units",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2024",
+)
+
+rust_test(
+    name = "tests",
+    crate = ":engineering_units",
+    edition = "2024",
+    # Dependencies only the tests need go here, not on the library. Shipping a
+    # test framework inside a flight binary would be embarrassing.
+    deps = ["@crates//:rstest"],
+)

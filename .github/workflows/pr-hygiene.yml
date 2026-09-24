@@ -1,0 +1,53 @@
+# Cheap checks on the shape of the pull request itself.
+#
+# Nothing here inspects your code. It exists because the two most common
+# review-blocking problems are not code problems: a PR with no description,
+# and a PR too large to review.
+
+name: PR Hygiene
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  pr-hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: PR has a description
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+          # Strip the template's comment lines before judging emptiness.
+          STRIPPED=$(printf '%s' "$PR_BODY" | sed 's/<!--.*-->//g' | tr -d '[:space:]')
+          if [ ${#STRIPPED} -lt 30 ]; then
+            echo "::error::This PR needs a real description."
+            echo "Say what changed and why. Your reviewer cannot infer intent from a diff,"
+            echo "and neither can you in six months when you are bisecting a regression."
+            exit 1
+          fi
+          echo "Description present."
+
+      - name: PR is reviewable in one sitting
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          # Exclude lockfiles and other generated content from the count.
+          CHANGED=$(git diff --numstat origin/main...HEAD \
+            -- . ':(exclude)*.lock' ':(exclude)MODULE.bazel.lock' \
+            | awk '{added += $1; removed += $2} END {print added + removed + 0}')
+          echo "Lines changed (excluding lockfiles): $CHANGED"
+          if [ "$CHANGED" -gt 600 ]; then
+            echo "::error::$CHANGED changed lines is too big to review well."
+            echo "Split it. See the Pull Request Standards section of the README."
+            exit 1
+          fi
+          if [ "$CHANGED" -gt 300 ]; then
+            echo "::warning::$CHANGED changed lines is on the large side."
+            echo "If this is more than one self-contained change, split it."
+          fi

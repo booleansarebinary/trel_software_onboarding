@@ -1,0 +1,78 @@
+# C++ formatting and linting.
+#
+# This workflow exists because the C++ build does not enforce either one. Rust
+# gets rustfmt and clippy for free through .bazelrc aspects; C++ does not, so
+# the check has to be its own job.
+#
+# It looks at the files YOUR PR CHANGED, not the whole repo. Two reasons:
+#
+#   1. It is fast and the failures are always about your own work.
+#   2. A repo-wide formatting check on a codebase that was never uniformly
+#      formatted fails forever, and a check that always fails gets ignored,
+#      then disabled, and then you have no check.
+#
+# The real fix for an existing messy codebase is one big reformatting commit
+# recorded in .git-blame-ignore-revs. Until someone does that, scope the check.
+
+name: C++ Format & Tidy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "**/*.cc"
+      - "**/*.h"
+      - ".clang-format"
+      - ".clang-tidy"
+      - ".github/workflows/cpp-format-tidy.yml"
+
+jobs:
+  format-and-tidy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-bazel
+
+      - name: Collect changed C++ files
+        id: changed
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          # --diff-filter=d skips files the PR deleted.
+          FILES=$(git diff --name-only --diff-filter=d origin/main...HEAD \
+            -- '*.cc' '*.h' | tr '\n' ' ' | xargs)
+          echo "files=$FILES" >>"$GITHUB_OUTPUT"
+          echo "Changed C++ files: ${FILES:-<none>}"
+
+      - name: clang-format
+        if: steps.changed.outputs.files != ''
+        env:
+          FILES: ${{ steps.changed.outputs.files }}
+        run: |
+          set -euo pipefail
+          bazel build //tools:clang_format
+          # --dry-run --Werror means "tell me and fail", never "rewrite my
+          # files". CI must not push formatting commits back at you.
+          "$(bazel info bazel-bin)/tools/clang-format" --dry-run --Werror $FILES
+
+      - name: clang-tidy
+        if: steps.changed.outputs.files != ''
+        env:
+          FILES: ${{ steps.changed.outputs.files }}
+        run: |
+          set -euo pipefail
+          # Headers get linted as part of the .cc files that include them,
+          # so only pass implementation files here.
+          SOURCES=""
+          for file in $FILES; do
+            case "$file" in
+              *.cc) SOURCES="$SOURCES $file" ;;
+            esac
+          done
+          if [ -z "$SOURCES" ]; then
+            echo "no .cc files changed; headers are covered by their sources"
+            exit 0
+          fi
+          ./dev_scripts/lint_cpp.sh $SOURCES

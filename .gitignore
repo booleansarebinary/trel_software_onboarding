@@ -1,0 +1,20 @@
+# === Bazel ===
+bazel-*
+**/bazel-bin/
+**/bazel-out/
+**/bazel-testlogs/
+.bazelrc.user
+
+# === OS & editor junk ===
+**/.DS_Store
+*.swp
+*.swo
+*~
+**/.idea/
+rust-project.json
+
+# === Build artifacts ===
+**/target/
+*.o
+*.a
+*.out

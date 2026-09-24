@@ -1,0 +1,23 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+package(default_visibility = ["//visibility:public"])
+
+# These targets BUILD AND PASS as-is. That is the whole lesson: a C++ target
+# can be green in Bazel and still be a mess, because clang-format and
+# clang-tidy are not part of the build the way rustfmt and clippy are. Nothing
+# here is tagged `manual` - there is nothing for Bazel to complain about.
+cc_library(
+    name = "valve_table",
+    srcs = ["src/valve_table.cc"],
+    hdrs = ["include/valve_table.h"],
+    includes = ["include"],
+)
+
+cc_test(
+    name = "tests",
+    srcs = ["tests/valve_table_test.cc"],
+    deps = [
+        ":valve_table",
+        "@googletest//:gtest_main",
+    ],
+)

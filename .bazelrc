@@ -1,0 +1,23 @@
+# Mirrors //trel3/.bazelrc. Do not add machine-specific flags here; put those
+# in a .bazelrc.user (gitignored) or on the command line.
+
+common --enable_bzlmod
+common --experimental_isolated_extension_usages
+common --enable_platform_specific_config
+common --guard_against_concurrent_changes
+
+# Rust hygiene is part of the build, not a separate step you can forget.
+# rustfmt_aspect makes `bazel build` fail on badly formatted Rust.
+# rust_clippy_aspect runs clippy over every Rust target you build.
+build --aspects=@rules_rust//rust:defs.bzl%rustfmt_aspect
+build --aspects=@rules_rust//rust:defs.bzl%rust_clippy_aspect
+build --output_groups=+rustfmt_checks
+build --output_groups=+clippy_checks
+build --nostamp
+
+build:macos --@toolchains_llvm//toolchain/config:libunwind=False
+
+# Show us the failing test's output instead of making you go hunting for a log.
+test --test_output=errors
+
+try-import %workspace%/.bazelrc.user

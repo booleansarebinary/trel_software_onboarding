@@ -1,0 +1,44 @@
+name: Setup Bazel
+description: Installs bazelisk at the version this repo pins and restores the Bazel cache.
+
+# trel3 has an equivalent composite action called `rapid-setup`. Factoring
+# shared setup into one action rather than repeating it in every workflow is
+# the same DRY instinct you would apply to code.
+
+runs:
+  using: composite
+  steps:
+    - name: Install bazelisk
+      shell: bash
+      run: |
+        set -euo pipefail
+        if command -v bazel >/dev/null 2>&1; then
+          echo "bazel already present: $(bazel --version)"
+          exit 0
+        fi
+        # bazelisk reads .bazelversion, so CI runs the same Bazel you do.
+        ARCH="$(uname -m)"
+        case "$ARCH" in
+          x86_64) SUFFIX="linux-amd64" ;;
+          aarch64 | arm64) SUFFIX="linux-arm64" ;;
+          *) echo "unsupported arch: $ARCH" >&2; exit 1 ;;
+        esac
+        curl -fsSLo /tmp/bazelisk \
+          "https://github.com/bazelbuild/bazelisk/releases/download/v1.27.0/bazelisk-${SUFFIX}"
+        chmod +x /tmp/bazelisk
+        sudo mv /tmp/bazelisk /usr/local/bin/bazel
+        bazel --version
+
+    # Without this, every run re-downloads the Rust and LLVM toolchains and CI
+    # takes ten minutes to tell you about a typo. trel3 solves the same problem
+    # with a shared remote cache on its own network.
+    - name: Restore Bazel cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/bazel
+          ~/.cache/bazelisk
+        key: bazel-${{ runner.os }}-${{ hashFiles('.bazelversion', 'MODULE.bazel') }}-${{ github.sha }}
+        restore-keys: |
+          bazel-${{ runner.os }}-${{ hashFiles('.bazelversion', 'MODULE.bazel') }}-
+          bazel-${{ runner.os }}-

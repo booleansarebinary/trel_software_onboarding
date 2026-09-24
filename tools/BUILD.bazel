@@ -1,0 +1,33 @@
+"""
+Developer tools, pinned to the same LLVM release the C++ toolchain uses.
+
+Why go through Bazel for a formatter? Because "works on my machine" is a
+formatting argument waiting to happen. clang-format 18 and clang-format 20
+disagree about real code, so if everyone runs whatever their package manager
+gave them, the repo churns. These targets guarantee you, your reviewer, and
+CI all run byte-identical binaries.
+
+Usage (the `--run_under` trick puts the tool in YOUR directory instead of
+Bazel's sandbox, which is the same incantation trel3 documents for ruff):
+
+    bazel run --run_under="cd $PWD &&" //tools:clang_format -- -i path/to/file.cc
+    bazel run --run_under="cd $PWD &&" //tools:clang_tidy -- path/to/file.cc
+
+Or just use //dev_scripts/format.sh, which wraps this.
+"""
+
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+native_binary(
+    name = "clang_format",
+    src = "@llvm_toolchain_llvm//:bin/clang-format",
+    out = "clang-format",
+)
+
+native_binary(
+    name = "clang_tidy",
+    src = "@llvm_toolchain_llvm//:bin/clang-tidy",
+    out = "clang-tidy",
+)

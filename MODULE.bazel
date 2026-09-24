@@ -1,0 +1,103 @@
+"""
+MODULE file for the TREL software onboarding sandbox.
+
+This is a deliberately small mirror of //trel3's MODULE.bazel. Read that file
+once you finish here - it is the same shape, just with Python, TypeScript,
+Flatbuffers, embedded toolchains, and a hundred crates on top.
+
+Two rules carried over from trel3 that matter to you:
+
+1. Dependencies are declared HERE, repo-wide, not per-package. A package
+   opts in to an already-declared dependency in its own BUILD.bazel.
+   See "Why External Dependencies are Specified Repo-Wide" in trel3's
+   README.bazel.md for the reasoning.
+2. We use bzlmod (this file), not WORKSPACE. If you ask an AI for Bazel help,
+   tell it you are on bzlmod or it will confidently hand you WORKSPACE syntax
+   that does nothing.
+"""
+
+module(
+    name = "trel_onboarding",
+    version = "0.0.1",
+)
+
+# General Bazel utilities.
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
+
+# Platform (OS / CPU) definitions.
+bazel_dep(name = "platforms", version = "1.0.0")
+
+# ---------------------------------------------------------------------------
+# C / C++ toolchain
+#
+# We pull a full LLVM toolchain down instead of using whatever clang or gcc
+# happens to be installed on your laptop. That is the whole point of Bazel:
+# your build does not depend on your machine. It also means `clang-format` and
+# `clang-tidy` are pinned to the same version for every developer and for CI,
+# so nobody argues about formatting diffs. See //tools/BUILD.bazel.
+# ---------------------------------------------------------------------------
+bazel_dep(name = "rules_cc", version = "0.2.17")
+bazel_dep(name = "toolchains_llvm", version = "1.6.0")
+
+llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
+llvm.toolchain(
+    name = "llvm_toolchain",
+    cxx_standard = {"": "c++20"},
+    llvm_version = "20.1.7",
+)
+use_repo(llvm, "llvm_toolchain", "llvm_toolchain_llvm")
+
+register_toolchains("@llvm_toolchain//:all")
+
+# C++ test framework. trel3 has a standing TODO to wire this up; here it is
+# already done so that you have something to write assertions with.
+bazel_dep(name = "googletest", version = "1.17.0")
+
+# ---------------------------------------------------------------------------
+# Rust toolchain
+# ---------------------------------------------------------------------------
+bazel_dep(name = "rules_rust", version = "0.70.0")
+
+RUST_EDITION = "2024"
+
+RUST_VERSION = "1.95.0"
+
+# trel3 also builds for thumbv7em (the scopium boards) and wasm32. You do not
+# need those to learn the language, so this repo sticks to host platforms.
+RUST_TARGET_PLATFORMS = [
+    "aarch64-apple-darwin",
+    "x86_64-apple-darwin",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-unknown-linux-gnu",
+]
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(
+    edition = RUST_EDITION,
+    extra_target_triples = RUST_TARGET_PLATFORMS,
+    versions = [RUST_VERSION],
+)
+use_repo(rust, "rust_toolchains")
+
+register_toolchains("@rust_toolchains//:all")
+
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+
+# There is no Cargo.toml in this repo, and there is none in trel3 either.
+# Bazel resolves crates from the specs below. Version numbers match trel3.
+crate.spec(
+    # The crate-name feature breaks under Bazel, hence default_features = False.
+    default_features = False,
+    features = ["async-timeout"],
+    package = "rstest",
+    version = "0.26.1",
+)
+crate.spec(
+    package = "serial_test",
+    version = "3.4.0",
+)
+crate.from_specs(
+    name = "crates",
+    supported_platform_triples = RUST_TARGET_PLATFORMS,
+)
+use_repo(crate, "crates")

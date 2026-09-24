@@ -1,0 +1,111 @@
+# Rust: build (which includes rustfmt + clippy), then test, and only for the
+# targets your PR can actually affect.
+#
+# ---------------------------------------------------------------------------
+# IF YOU MOVE THIS REPO ONTO TREL's GITHUB ENTERPRISE SERVER
+# GHES has no GitHub-hosted runners. Change every `runs-on: ubuntu-latest`
+# below to the self-hosted labels trel3 uses:
+#
+#     runs-on: [bazel, "run-${{ github.run_id }}"]
+#
+# and add `--config=ci` to the bazel invocations so they use the shared remote
+# cache. Nothing else needs to change.
+# ---------------------------------------------------------------------------
+
+name: Rust Build & Lint, Test
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    # Only run when something that could affect a Rust target changed. A CI
+    # pipeline that runs on every PR regardless of content trains people to
+    # ignore it.
+    paths:
+      - ".bazelrc"
+      - ".bazelversion"
+      - "MODULE.bazel"
+      - "**/BUILD.bazel"
+      - "**/*.rs"
+      - ".github/workflows/rust-build-lint-test.yml"
+
+jobs:
+  compute-affected-targets:
+    runs-on: ubuntu-latest
+    outputs:
+      build_targets: ${{ steps.build_targets.outputs.targets }}
+      test_targets: ${{ steps.test_targets.outputs.targets }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # rdeps needs real history to diff against main.
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-bazel
+
+      - name: Determine changed files vs main
+        id: changes
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          echo "changed_files=$(git diff --name-only origin/main...HEAD | tr '\n' ' ' | xargs)" >>"$GITHUB_OUTPUT"
+
+      - name: Compute affected build targets
+        id: build_targets
+        run: |
+          set -euo pipefail
+          source .github/workflow_scripts/compute_affected_targets.sh
+          TARGETS=$(bazel query 'kind("rust_(binary|library|test)", //...)' | tr '\n' ' ' | xargs)
+          compute_affected_targets "$TARGETS" "${{ steps.changes.outputs.changed_files }}" "targets"
+
+      - name: Compute affected test targets
+        id: test_targets
+        env:
+          ALL_AFFECTED: ${{ steps.build_targets.outputs.targets }}
+        run: |
+          set -euo pipefail
+          if [ -z "$ALL_AFFECTED" ]; then
+            echo "targets=" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          AFFECTED=$(bazel query "kind('rust_test', set($ALL_AFFECTED))" | tr '\n' ' ' | xargs)
+          echo "targets=$AFFECTED" >>"$GITHUB_OUTPUT"
+
+  # There is no separate lint job, and that is not an oversight. .bazelrc
+  # attaches the rustfmt and clippy aspects to every build, so a build failure
+  # here is as likely to be a formatting problem as a compile error. Read the
+  # log - it prints the exact diff rustfmt wants.
+  build-and-lint:
+    needs: compute-affected-targets
+    if: needs.compute-affected-targets.outputs.build_targets != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-bazel
+      - name: Build affected targets
+        env:
+          TARGETS: ${{ needs.compute-affected-targets.outputs.build_targets }}
+        run: |
+          set -euo pipefail
+          echo "Building: $TARGETS"
+          bazel build $TARGETS
+
+  test:
+    needs: [build-and-lint, compute-affected-targets]
+    if: needs.compute-affected-targets.outputs.test_targets != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-bazel
+      - name: Test affected targets
+        env:
+          TARGETS: ${{ needs.compute-affected-targets.outputs.test_targets }}
+        run: |
+          set -euo pipefail
+          echo "Testing: $TARGETS"
+          bazel test --test_output=errors $TARGETS
+      - name: Upload failing test logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failing-test-logs
+          path: bazel-testlogs/**
+          if-no-files-found: ignore

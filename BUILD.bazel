@@ -1,0 +1,7 @@
+package(default_visibility = ["//visibility:public"])
+
+# Made available to Bazel targets and to the scripts in //dev_scripts.
+exports_files([
+    ".clang-format",
+    ".clang-tidy",
+])

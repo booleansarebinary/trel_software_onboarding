@@ -1,0 +1,14 @@
+# Pinned so that every developer and CI produce identical output.
+# Run //dev_scripts/format.sh rather than memorizing clang-format flags.
+BasedOnStyle: Google
+Language: Cpp
+Standard: c++20
+ColumnLimit: 100
+IndentWidth: 4
+AccessModifierOffset: -2
+PointerAlignment: Left
+DerivePointerAlignment: false
+IncludeBlocks: Regroup
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
