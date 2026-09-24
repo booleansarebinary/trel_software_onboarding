@@ -23,7 +23,7 @@ runs:
           *) echo "unsupported arch: $ARCH" >&2; exit 1 ;;
         esac
         curl -fsSLo /tmp/bazelisk \
-          "https://github.com/bazelbuild/bazelisk/releases/download/v1.27.0/bazelisk-${SUFFIX}"
+          "https://github.com/bazelbuild/bazelisk/releases/download/v1.29.0/bazelisk-${SUFFIX}"
         chmod +x /tmp/bazelisk
         sudo mv /tmp/bazelisk /usr/local/bin/bazel
         bazel --version

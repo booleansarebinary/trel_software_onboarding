@@ -22,7 +22,7 @@ As for AI Use: I would recommend trying to do these exercises without AI, so you
 TREL software is export-controlled. So keep the following in mind when you get access to our main repo. Ideally, we should be sshing into the TREL PCs and developing on them, but we're not able to host our software on those computers, so this is our workaround.
 
 **1. Keep the repo on your local disk.** Clone into a plain local directory:
-`mkdir -p ~/dev && cd ~/dev`. Don't do Documents/Desktop on your Mac or Windows (even if it's not currently in the Cloud), don't store it in iCloud or any cloud.
+`mkdir -p ~/dev && cd ~/dev`. Don't use Documents/Desktop on your Mac or Windows (even if it's not currently in the Cloud), don't store it in iCloud or any cloud.
 
 **2. Encrypt your disk.**
 
@@ -67,7 +67,7 @@ Our repo doesn't support Windows, so the workaround is WSL.
 If Bazel eats all your RAM, cap it in `C:\Users\<you>\.wslconfig` with
 `[wsl2]` and `memory=8GB`, then `wsl --shutdown` and reopen.
 
-Note: I don't have a Windows computer, so if you find that this does not accurately reflect your experience, make a PR to change the steps!
+Note: I don't have a Windows computer, so if you find that this does not accurately reflect your experience, make a PR to change the steps.
 
 ### macOS
 
@@ -88,18 +88,59 @@ git config --global credential.helper \
   /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
 ```
 
-Then install bazelisk: grab a binary from
-[bazelbuild/bazelisk](https://github.com/bazelbuild/bazelisk/releases) and put it
-on your `PATH` as `bazel`.
+There is no apt package for bazelisk, so install it by hand. Copy this whole
+block - it figures out whether you need the x86 or ARM build, checks the download
+against the checksum the Bazel team published, and installs it as `bazel`:
+
+```bash
+ARCH=$(dpkg --print-architecture)          # prints amd64 on most machines, arm64 on ARM
+BAZELISK=v1.29.0
+BASE=https://github.com/bazelbuild/bazelisk/releases/download/$BAZELISK
+
+curl -fsSLo /tmp/bazelisk "$BASE/bazelisk-linux-$ARCH"
+curl -fsSLo /tmp/bazelisk.sha256 "$BASE/bazelisk-linux-$ARCH.sha256"
+echo "$(cat /tmp/bazelisk.sha256)  /tmp/bazelisk" | sha256sum -c -
+
+sudo install -m 755 /tmp/bazelisk /usr/local/bin/bazel
+```
+
+The `sha256sum -c -` line should print `/tmp/bazelisk: OK`. If it says `FAILED`,
+stop and tell us rather than installing it - you got a corrupted or wrong file.
+
+Check it worked, from inside this repo:
+
+```bash
+bazel --version     # should print: bazel 8.5.1
+```
+
+It prints 8.5.1 rather than something newer because `.bazelversion` pins that,
+which is the whole reason for using bazelisk.
+
+(That `dpkg` command is Debian/Ubuntu-only, which covers WSL too. On another
+distro, use `uname -m` instead: `x86_64` means you want `amd64`, and `aarch64`
+means `arm64`.)
 
 **Install bazelisk, not bazel** on either platform. It reads `.bazelversion` and
-runs the exact Bazel version this repo pins, so nobody drifts onto their own. The
-credential manager is worth the extra step too: git access here uses a token
-rather than a password, so this way you type it once instead of every push.
+runs the exact Bazel version this repo pins, so nobody drifts onto their own.
+
+The `git-credential-manager` / `libsecret` line is optional. It saves you
+retyping credentials on every push if you clone over HTTPS; skip it if you use
+SSH keys.
 
 ### Then, everyone
 
-1. **Clone** (somewhere locally).
+1. **Clone it** somewhere local (see
+   [Where This Code Lives](#where-this-code-lives)):
+
+   ```bash
+   mkdir -p ~/dev && cd ~/dev
+   git clone <paste the URL from the repo's "Code" button>
+   cd trel_software_onboarding
+   ```
+
+   SSH or HTTPS, whichever you already have working - nothing here cares. If git
+   asks for credentials and you are not sure what it wants, just ask us. It is a
+   two minute fix and not worth burning an evening on.
 
 2. **Run `./dev_scripts/setup.sh`.** The first run downloads a Rust toolchain and
    a full LLVM toolchain that mimics the environment we use. It takes a few
@@ -114,7 +155,8 @@ rather than a password, so this way you type it once instead of every push.
    everyone.
 
 3. **VS Code** with the Rust Analyzer, Bazel, and C/C++ extensions is optional,
-   but it'll make your life easier.
+   but it'll make your life easier. Opening the folder there also picks up the
+   format-on-save settings this repo ships.
 
 ## What Is In Here
 
@@ -147,13 +189,13 @@ Create an individual pull request (PR) on a separate branch for every one of the
 | `cpp_exercises/ex1_pressure_units` | 25 min | `cc_library`, `cc_test`, GoogleTest |
 | `cpp_exercises/ex2_format_and_tidy` | 20 min | A target that builds green and is still unmergeable |
 
-If you find these exercises are taking you too long, stop and ask someone! It could be that there is an issue with the tools and not your code.
+If you find these exercises are taking you too long, stop and ask someone. It could be an issue with the tools and not your code.
 
 ## Bazel
-Bazel is complicated, there's no doubt about it. But it's worth working with because it ensures compile-time consistency for every computer. So you never have the problem of "the rocket code works on my computer but not theirs." (Pretty dangerous when launching a rocket.)
+Bazel is...complicated. But it's worth working with because it ensures compile-time consistency for every computer. So you never have the problem of "the rocket code works on my computer but not theirs." (Pretty dangerous when launching a rocket.)
 
-A **build** is just compiling and linking source code into something usable - a
-library, an executable, a test binary. Nothing exotic.
+A **build** is compiling and linking source code into something usable like a
+library, an executable, or a test binary.
 
 A **target** is one named unit of that work, declared in a `BUILD.bazel` file.
 The declaration says what kind of thing to produce, which source files go into
@@ -331,9 +373,9 @@ scripts above rather than a `brew install llvm` copy.
 
 ## Writing A Good Test
 
-Very very important! At one point (maybe even currently?) our codebase had more lines of code that was test code as opposed to feature code. It may seem excessive: tests in an MVP?
+Very very important! At one point (maybe even currently?) our codebase had more lines of code that was test code as opposed to feature code. It may seem excessive: do we really need tests in an MVP?
 
-And yes, we aren't trying to implement big production tests that might be found in the CD (continuous deployment). We're mostly focusing on unit tests and formatting checks. This ensures that when (not if) something breaks, we can pinpoint exactly where it is.
+The answer is it depends on the kind of test. If we were implementing heavy tests that you might find in a CD (continuous deployment) pipeline, we would not be making a wise decision. But if we don't have unit tests, when something breaks, it's extremely difficult to figure out where the problem is. This takes less time in the long run.
 
 Here's an example from `rust_exercises/ex1_engineering_units`:
 
