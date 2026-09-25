@@ -7,6 +7,9 @@ fail, *then* fix the code.
 This is a cut-down model of real ground software: the abort operator that watches
 for redline conditions during a test and drives valves to a safe state.
 
+[HINTS.md](HINTS.md) explains the Rust and git this exercise uses, and has a few
+nudges toward the bug if you get stuck.
+
 ## The setup
 
 Run the tests. All three existing tests pass:
@@ -58,6 +61,8 @@ first run and demonstrates nothing - not to your reviewer, and not to you.
 - Your PR has two commits in that order, and the description says what the bug
   was in a sentence.
 - Reverting just your fix makes only your new test fail.
+- The `TODO(you)` comment is gone. It was a note for you, and once the work is
+  done it would only confuse the next reader.
 
 ## Why this one matters
 

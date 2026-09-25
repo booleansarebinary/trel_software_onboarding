@@ -3,6 +3,8 @@
 **About 20 minutes.** The goal is to see for yourself that a C++ target can pass
 its build and all its tests while still being something we would not merge.
 
+[HINTS.md](HINTS.md) walks through each fix with an example.
+
 Start here:
 
 ```bash
@@ -13,7 +15,7 @@ It passes. Nothing is skipped, and Bazel has no complaint at all. Now run the
 tools Bazel does not run for you:
 
 ```bash
-./dev_scripts/format.sh --check
+./dev_scripts/format.sh --check cpp_exercises/ex2_format_and_tidy
 ./dev_scripts/lint_cpp.sh cpp_exercises/ex2_format_and_tidy/src/valve_table.cc
 ```
 
@@ -29,7 +31,7 @@ you and your reviewer are the safety net.**
    by hand wastes everyone's time:
 
    ```bash
-   ./dev_scripts/format.sh
+   ./dev_scripts/format.sh cpp_exercises/ex2_format_and_tidy
    ```
 
 2. Fix the clang-tidy findings **by hand**. These are semantic rather than
@@ -38,7 +40,8 @@ you and your reviewer are the safety net.**
    - `modernize-use-using` - `typedef int ValveId;` should be
      `using ValveId = int;`
    - `readability-identifier-naming` - `FindByName` should be `find_by_name`,
-     `Count` should be `count`, and the private member `entries` needs its
+     `CountNormallyOpen` should be `count_normally_open`, `Count` should be
+     `count`, and the private member `entries` needs its
      trailing underscore. The naming rules live in `.clang-tidy`. They are
      arbitrary, but shared, which is the only property that matters.
    - `modernize-use-nullptr` - `NULL` is a C macro. Use `nullptr`.
@@ -58,7 +61,7 @@ you and your reviewer are the safety net.**
 
 ## Done when
 
-- `./dev_scripts/format.sh --check` is clean.
+- `./dev_scripts/format.sh --check cpp_exercises/ex2_format_and_tidy` is clean.
 - `./dev_scripts/lint_cpp.sh` is clean for this package.
 - `bazel test //cpp_exercises/ex2_format_and_tidy:tests` still passes.
 - No `// NOLINT` comments added. Suppressing a linter needs a reason, and none of

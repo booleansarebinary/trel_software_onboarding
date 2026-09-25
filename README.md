@@ -317,6 +317,8 @@ Fixed graph on dashboard page to update immediately.
 
 If you stick around software engineers for long enough, you know that they have very strong opinions on code hygiene, commit messages, and seemingly insignificant details. We're trying to find a middle ground: detailed enough that we eliminate many small and careless bugs, but not so strict as to waste time.
 
+[With this in mind, do you think the author of this repo made good commits when creating this repo 😜?]
+
 ### Keep PRs small
 
 This really helps your reviewer see your changes. Ideally, keep it to a few hundred lines of changes. (The ticketing system will make this easier because it will define your task for you.)

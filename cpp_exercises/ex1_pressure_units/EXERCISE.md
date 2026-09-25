@@ -9,6 +9,8 @@ bazel test //cpp_exercises/ex1_pressure_units:tests
 Two tests pass already - they cover `psi_to_kpa`, which is done. The other two
 functions are stubs.
 
+[HINTS.md](HINTS.md) explains the C++ and GoogleTest this exercise uses.
+
 ## Steps
 
 1. Read `include/pressure_units.h`. In C++ the header is the contract: it is what
@@ -28,7 +30,7 @@ functions are stubs.
 5. Check formatting and lint, since nothing in the build does it for you:
 
    ```bash
-   ./dev_scripts/format.sh --check
+   ./dev_scripts/format.sh --check cpp_exercises/ex1_pressure_units
    ./dev_scripts/lint_cpp.sh cpp_exercises/ex1_pressure_units/src/pressure_units.cc
    ```
 
@@ -42,5 +44,7 @@ functions are stubs.
 - `EXPECT_*` where the test can usefully keep going, `ASSERT_*` only where
   continuing would dereference a null pointer or similar.
 - clang-format and clang-tidy are clean on your files.
+- The `TODO(you)` comments are gone. They were notes for you, and once the work
+  is done they would only confuse the next reader.
 - Your PR says whether you made the tolerance boundary inclusive or exclusive,
   and why. Either is defensible; we just want to see the reasoning.

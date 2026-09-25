@@ -6,7 +6,7 @@ Small scripts so you don't have to memorize tool invocations.
 | --- | --- |
 | `setup.sh` | Run once after cloning. Checks where the repo lives, checks for bazelisk, downloads the toolchains, runs a baseline build and test. |
 | `check_storage.sh` | Verifies this checkout is on local encrypted storage and not in a cloud-synced folder. Safe to run any time. |
-| `format.sh` | Formats all Rust and C++. `--check` reports without rewriting. |
+| `format.sh` | Formats all Rust and C++, or only the directories you pass it. `--check` reports without rewriting. |
 | `lint_cpp.sh` | Runs clang-tidy over the C++ sources with the right compile flags. |
 
 ## Do I need to run `format.sh` every time?

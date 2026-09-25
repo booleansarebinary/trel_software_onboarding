@@ -7,6 +7,9 @@ little Rust, and writing tests.
 Try it without AI if you can - the errors in steps 1 and 2 are the whole point,
 and they are much more useful when you read them yourself. Stuck? Ask us.
 
+New to Rust? [HINTS.md](HINTS.md) explains every piece of syntax this exercise
+uses - `mut`, `Some`, `as u16`, `.clamp()`, `push_str`, the leading `_`, and more.
+
 ## 1. Try to build it. It fails on purpose.
 
 ```bash
@@ -19,8 +22,12 @@ compile here - which means nobody can forget to format. Fix it with the tool
 rather than by hand:
 
 ```bash
-./dev_scripts/format.sh
+./dev_scripts/format.sh rust_exercises/ex1_engineering_units
 ```
+
+The path keeps the formatter to this exercise. Without it, `format.sh` formats
+the whole repo, including C++ exercise 2, which is messy on purpose so you can
+see that step for yourself later.
 
 (If you are in VS Code and ran setup, formatting also happens when you hit save.)
 
@@ -76,7 +83,7 @@ anything, and this is the fastest way to find that out.
 ## 6. Open the PR.
 
 ```bash
-./dev_scripts/format.sh
+./dev_scripts/format.sh rust_exercises/ex1_engineering_units
 bazel test //rust_exercises/ex1_engineering_units:tests
 ```
 
@@ -91,10 +98,13 @@ Then follow the loop in the "Git And Pull Requests" section of the root README.
   assertions separated by blank lines.
 - Nothing in `mod tests` is `pub`.
 - No `#[allow(...)]` anywhere.
+- The `TODO(you)` comments are gone. They were notes for you, and once the work
+  is done they would only confuse the next reader.
 
 ## Things that trip people up
 
-- **A build error that is a diff** is the formatter. `./dev_scripts/format.sh`.
+- **A build error that is a diff** is the formatter.
+  `./dev_scripts/format.sh rust_exercises/ex1_engineering_units`.
 - **A build error suggesting better code** is clippy. The message usually
   contains the fix.
 - **You changed a file and Bazel says nothing changed.** You are probably
