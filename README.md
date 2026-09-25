@@ -35,7 +35,7 @@ TREL software is export-controlled. So keep the following in mind when you get a
 **3. Do not put it in the cloud.** Again, repeating this point because it's very important to meet ITAR regulations.
 
 **4. The Bazel cache counts too.** Bazel keeps an *output base* full of compiled
-copies of repo sources (`bazel info output_base`). SO this needs to be local too.
+copies of repo sources (`bazel info output_base`). So this needs to be local too.
 
 **A note on AI use:** For now, leadership has okayed using AI to help code. In the future, when software becomes more maintenance work, we might be able to look into creating local models for TREL to use.
 
@@ -50,19 +50,18 @@ Our repo doesn't support Windows, so the workaround is WSL.
 1. In an **admin** PowerShell, then reboot when prompted:
    `wsl --install -d Ubuntu-24.04`
 
-2. Confirm the Windows drive is encrypted with `manage-bde -status C:` (still in
-   admin PowerShell). This is the *host's* job - encrypting inside Linux does
-   nothing for you. You want `Protection On`; if not, turn on BitLocker in
-   Windows Settings.
+2. Check the Windows drive is encrypted with `manage-bde -status C:` (still in
+   admin PowerShell). You want `Protection On`. If not, turn on BitLocker in
+   Windows Settings. It has to be the Windows drive; encrypting inside Linux
+   doesn't count.
 
 3. Open Ubuntu and follow the **Linux** steps below, inside it.
 
-4. **Clone into your Linux home (`~/dev`), never `/mnt/c/...`.** Bazel across the
-   Windows/Linux filesystem boundary is brutally slow, and anything under
-   `/mnt/c` sits on the Windows drive where OneDrive can reach it.
+4. **Clone into your Linux home (`~/dev`), never `/mnt/c/...`.** `/mnt/c` is the
+   Windows drive: Bazel is very slow there, and OneDrive can reach it.
 
 5. For VS Code, install the **WSL** extension on Windows, then run `code .` from
-   inside Ubuntu so the language servers run Linux-side.
+   inside Ubuntu.
 
 If Bazel eats all your RAM, cap it in `C:\Users\<you>\.wslconfig` with
 `[wsl2]` and `memory=8GB`, then `wsl --shutdown` and reopen.
@@ -88,9 +87,9 @@ git config --global credential.helper \
   /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
 ```
 
-There is no apt package for bazelisk, so install it by hand. Copy this whole
-block - it figures out whether you need the x86 or ARM build, checks the download
-against the checksum the Bazel team published, and installs it as `bazel`:
+There's no apt package for bazelisk, so copy this whole block. It picks the
+right build for your CPU, checks the download isn't corrupted, and installs it as
+`bazel`:
 
 ```bash
 ARCH=$(dpkg --print-architecture)          # prints amd64 on most machines, arm64 on ARM
@@ -105,7 +104,7 @@ sudo install -m 755 /tmp/bazelisk /usr/local/bin/bazel
 ```
 
 The `sha256sum -c -` line should print `/tmp/bazelisk: OK`. If it says `FAILED`,
-stop and tell us rather than installing it - you got a corrupted or wrong file.
+stop and tell us instead of installing it.
 
 Check it worked, from inside this repo:
 
@@ -113,19 +112,15 @@ Check it worked, from inside this repo:
 bazel --version     # should print: bazel 8.5.1
 ```
 
-It prints 8.5.1 rather than something newer because `.bazelversion` pins that,
-which is the whole reason for using bazelisk.
+(Not on Ubuntu or WSL? The `dpkg` line won't work. Use `uname -m` instead:
+`x86_64` means `amd64`, and `aarch64` means `arm64`.)
 
-(That `dpkg` command is Debian/Ubuntu-only, which covers WSL too. On another
-distro, use `uname -m` instead: `x86_64` means you want `amd64`, and `aarch64`
-means `arm64`.)
+**Install bazelisk, not bazel,** on either platform. It reads `.bazelversion` and
+runs the exact Bazel version this repo pins (8.5.1), so everyone is on the same
+one.
 
-**Install bazelisk, not bazel** on either platform. It reads `.bazelversion` and
-runs the exact Bazel version this repo pins, so nobody drifts onto their own.
-
-The `git-credential-manager` / `libsecret` line is optional. It saves you
-retyping credentials on every push if you clone over HTTPS; skip it if you use
-SSH keys.
+The `git-credential-manager` / `libsecret` lines are optional. They save you
+retyping your password on every push over HTTPS. Skip them if you use SSH keys.
 
 ### Then, everyone
 
@@ -138,25 +133,16 @@ SSH keys.
    cd trel_software_onboarding
    ```
 
-   SSH or HTTPS, whichever you already have working - nothing here cares. If git
-   asks for credentials and you are not sure what it wants, just ask us. It is a
-   two minute fix and not worth burning an evening on.
+   SSH or HTTPS both work. If git asks for credentials and you're not sure what
+   it wants, just ask us. It's a two-minute fix.
 
-2. **Run `./dev_scripts/setup.sh`.** The first run downloads a Rust toolchain and
-   a full LLVM toolchain that mimics the environment we use. It takes a few
-   minutes and a few GB the first time, then seconds after that.
-
-   A *toolchain* is the whole set of programs that turns source code into
-   something runnable: the compiler, the linker, and the standard library that
-   gets linked in. Bazel downloads a pinned one instead of using whatever
-   compiler happens to be on your laptop, which is what lets us promise the
-   build behaves the same everywhere. It is also where `clang-format` and
-   `clang-tidy` come from, so even the formatter is the same version for
-   everyone.
+2. **Run `./dev_scripts/setup.sh`.** The first run downloads the Rust and C++
+   toolchains (the compiler and everything that goes with it). It takes a few
+   minutes and a few GB the first time, then seconds after that. Bazel uses these
+   instead of whatever is on your laptop, so the build is the same for everyone.
 
 3. **VS Code** with the Rust Analyzer, Bazel, and C/C++ extensions is optional,
-   but it'll make your life easier. Opening the folder there also picks up the
-   format-on-save settings this repo ships.
+   but it'll make your life easier. It also formats your code on save.
 
 ## What Is In Here
 
@@ -173,10 +159,9 @@ cpp_exercises/      <- the two C++ exercises, after the Rust pair
 Finish reading this file, then read `rust_exercises/README.md`, then start on
 `rust_exercises/ex1_engineering_units/EXERCISE.md`.
 
-Every exercise has an `EXERCISE.md` with steps, a "Done when" list, and the things
-that usually trip people up. The real teaching is in the source comments, so read
-the code. The sub-READMEs in `rust_exercises/`, `cpp_exercises/`, and
-`dev_scripts/` hold the detail this file only summarizes.
+Every exercise has an `EXERCISE.md` with the steps and a "Done when" list, and a
+`HINTS.md` that explains the syntax it uses. The source comments explain a lot
+too, so read the code.
 
 ## The Ladder
 
@@ -222,15 +207,10 @@ You refer to a target by its **label**: the path to the directory holding the
 `//rust_exercises/ex1_engineering_units:tests`. `//foo/bar/...` means every
 target at or below that directory, and `//...` is the whole repo.
 
-Why bother declaring all this instead of pointing a compiler at a folder?
-Because now Bazel knows the exact dependency graph. It can skip rebuilding
-anything whose inputs did not change, and CI can ask it "which targets could
-this PR have broken?" The cost is that Bazel only sees what a `BUILD.bazel`
-declares - a source file not listed in some `srcs` does not exist as far as
-Bazel is concerned, which is a confusing five minutes the first time it happens
-to you.
-
-
+Why declare all this? Because then Bazel knows exactly what depends on what. It
+can skip rebuilding anything that didn't change, and CI can work out which
+targets your PR could have broken. The catch: if a file isn't listed in some
+`srcs`, Bazel doesn't know it exists.
 
 The commands you'll use the most often are bazel build and bazel test.
 
@@ -256,11 +236,10 @@ The commands you'll use the most often are bazel build and bazel test.
 | A target is missing from `//...` | It is tagged `manual` in its `BUILD.bazel`, which keeps it out of wildcards. |
 | Genuinely wedged | `bazel clean`. `--expunge` re-downloads every toolchain, so ask first. |
 
-One real gotcha when you look things up: Bazel has two generations of dependency
-config. The old one used a `WORKSPACE` file; the current one is called **bzlmod**
-and uses `MODULE.bazel`. This repo has no `WORKSPACE` file at all. Most Bazel
-answers you find online (and most AI answers) are written for `WORKSPACE`, and
-that syntax does nothing here - so say "bzlmod" when you search or ask.
+One gotcha when you search online: Bazel has an old setup style (a `WORKSPACE`
+file) and a new one (**bzlmod**, using `MODULE.bazel`). We use bzlmod. Most
+answers online, and from AI, are for the old style and won't work here, so add
+"bzlmod" to your search.
 
 ## Git And Pull Requests
 
@@ -294,18 +273,19 @@ git switch -c ex1-to-counts-tests
 # The -c stands for create. Omit it when switching to an existing branch.
 
 # Work, then run what you are about to ask someone to review
-./dev_scripts/format.sh
+./dev_scripts/format.sh rust_exercises/ex1_engineering_units
 bazel test //rust_exercises/ex1_engineering_units:tests
 
-# . is for all files you touched, you can name specific files as wlel.
+# . is for all files you touched, you can name specific files as well.
 git add .
 git commit -m "YOUR_COMMIT_MESSAGE_HERE"
 git diff origin/main...HEAD   # don't forget to check this step!
 git push -u origin ex1-to-counts-tests
 ```
 
-Then open the PR in the web UI and fill in the template. Open it as a **draft**
-if it is not ready but you want to ask someone questions.
+Then open the PR in the web UI and fill in the template: what it changes, and
+why. Open it as a **draft** if it's not ready but you want to ask someone
+questions.
 
 ### Commit messages
 
@@ -316,6 +296,8 @@ Fixed graph on dashboard page to update immediately.
 ```
 
 If you stick around software engineers for long enough, you know that they have very strong opinions on code hygiene, commit messages, and seemingly insignificant details. We're trying to find a middle ground: detailed enough that we eliminate many small and careless bugs, but not so strict as to waste time.
+
+[With this in mind, do you think the author of this repo made good commits when creating this repo 😜?]
 
 ### Keep PRs small
 
@@ -331,9 +313,9 @@ Don't worry about this too much now. It's a suite of automated tests that run wh
 
 ## Formatting And Linting
 
-The standing rule: **code with failing lint, tests, or build does not get
-merged.** A lint ignore for a stated, legitimate reason is fine; one used to make
-a message go away is not. How it gets enforced depends on the language:
+The rule: **code with failing lint, tests, or build doesn't get merged.**
+Turning off a lint warning is fine if you write down a real reason, but not just
+to make the message go away. How it's enforced depends on the language:
 
 | | Rust | C++ |
 | --- | --- | --- |
@@ -342,34 +324,27 @@ a message go away is not. How it gets enforced depends on the language:
 | Can unformatted code build? | **No.** Build fails with a diff. | Yes. |
 | Are lint findings errors? | **Yes.** Hard build failure. | Only where a script or CI runs them |
 
-In Rust you cannot forget; in C++ you can, so it needs discipline Rust gets for
-free. `cpp_exercises/README.md` covers that.
+In Rust you can't forget. In C++ you can, so it's up to you (and CI).
 
 ```bash
-./dev_scripts/format.sh           # format all Rust and C++ in place
-./dev_scripts/format.sh --check   # report only, fail if dirty
-./dev_scripts/lint_cpp.sh         # clang-tidy over C++ sources
-bazel build //...                 # this IS the Rust lint
+./dev_scripts/format.sh             # format all Rust and C++ in place
+./dev_scripts/format.sh <folder>    # format just one folder, like an exercise
+./dev_scripts/format.sh --check     # report only, fail if anything needs formatting
+./dev_scripts/lint_cpp.sh           # clang-tidy over C++ sources
+bazel build //...                   # this IS the Rust lint
 ```
 
-**Do you have to run `format.sh` every time?** No, and it helps to separate two
-jobs here. *Checking* is automatic for Rust: `bazel build` runs rustfmt and clippy
-for you and fails if either is unhappy, so you cannot forget. `format.sh` is the
-**fixer** - you run it when the build tells you the formatting is off, because
-fixing whitespace by hand is a waste of your time. For C++ nothing in the build
-checks anything, so there you do need to run the scripts (or let CI catch it).
+**Do you have to run `format.sh` every time?** Not for Rust. `bazel build` already
+checks formatting and fails if it's off. `format.sh` is how you *fix* it, so you
+don't fix whitespace by hand. For C++ nothing in the build checks, so run the
+scripts yourself (or let CI catch it).
 
-If you would rather not think about it at all, this repo ships a
-`.vscode/settings.json` that formats on save using these same pinned tools. Run
-setup once, reopen the folder in VS Code, and formatting stops being a step you
-remember.
+Easiest of all: open the repo in VS Code after running setup, and it formats on
+save.
 
-Both C++ tools come out of the LLVM toolchain Bazel downloads - `//tools:clang_format`
-and `//tools:clang_tidy` are clang-format and clang-tidy 20.1.7, the same binaries
-CI runs. That is on purpose: different major versions of clang-format format the
-same file differently, so if everyone used whatever their package manager gave
-them, we would get formatting-only diffs fighting each other in PRs. Use the
-scripts above rather than a `brew install llvm` copy.
+Use these scripts rather than a clang-format you installed yourself (like
+`brew install llvm`). Different versions format the same file differently, and
+the scripts use the exact version CI does.
 
 ## Writing A Good Test
 
@@ -408,8 +383,8 @@ The rest, briefly:
 - One behavior per test, and no logic in tests - no `if` deciding what to assert,
   no computing the expected value with the formula the code uses. Loops that just
   repeat a call are fine.
-- `.expect("message")` rather than `.unwrap()`, so a failure is a sentence. Nothing
-  `pub` in a `tests` module. Rust tests live in the same file as the code.
+- `.expect("message")` rather than `.unwrap()`, so a failure explains itself.
+  Nothing `pub` in a `tests` module. Rust tests live in the same file as the code.
 - C++: GoogleTest, `EXPECT_*` unless continuing would crash, and `EXPECT_NEAR` or
   `EXPECT_DOUBLE_EQ` for floats - `0.1 + 0.2 == 0.3` is false.
 - **Check that your test can fail.** Break the code on purpose and confirm it
