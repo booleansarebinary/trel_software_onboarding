@@ -92,18 +92,24 @@ case "$(uname -s)" in
         esac
         ;;
     Linux)
-        root_src="$(findmnt -n -o SOURCE --target "$REPO_ROOT" 2>/dev/null)"
-        if [ -n "$root_src" ] && lsblk -no TYPE "$root_src" 2>/dev/null | grep -q crypt; then
-            pass "filesystem holding this repo is on an encrypted device"
-        elif command -v lsblk >/dev/null 2>&1 && lsblk -o TYPE 2>/dev/null | grep -q crypt; then
-            warn "an encrypted volume exists but this repo may not be on it; verify with:"
-            echo "         findmnt --target \"$REPO_ROOT\" && lsblk"
-        else
-            fail "no encrypted volume detected (expected LUKS/dm-crypt). Verify with lsblk."
-        fi
         if grep -qi microsoft /proc/version 2>/dev/null; then
-            warn "WSL detected: encryption is the WINDOWS host's job. Confirm BitLocker"
-            echo "         is on for the drive backing this WSL distro."
+            # WSL's Linux disk is a virtual disk file on the Windows drive, so
+            # there is never a LUKS layer to find here. BitLocker on the host is
+            # what protects it, and checking that needs an admin PowerShell,
+            # which this script cannot open for you.
+            warn "WSL detected: encryption is the WINDOWS host's job, so it can't be"
+            echo "         checked from here. In an admin PowerShell, run"
+            echo "         manage-bde -status C:   and look for \"Protection On\"."
+        else
+            root_src="$(findmnt -n -o SOURCE --target "$REPO_ROOT" 2>/dev/null)"
+            if [ -n "$root_src" ] && lsblk -no TYPE "$root_src" 2>/dev/null | grep -q crypt; then
+                pass "filesystem holding this repo is on an encrypted device"
+            elif command -v lsblk >/dev/null 2>&1 && lsblk -o TYPE 2>/dev/null | grep -q crypt; then
+                warn "an encrypted volume exists but this repo may not be on it; verify with:"
+                echo "         findmnt --target \"$REPO_ROOT\" && lsblk"
+            else
+                fail "no encrypted volume detected (expected LUKS/dm-crypt). Verify with lsblk."
+            fi
         fi
         ;;
     *)
@@ -131,8 +137,11 @@ if [ -n "$OUTPUT_BASE" ]; then
     else
         pass "Bazel output base is local ($OUTPUT_BASE)"
     fi
+elif ! command -v bazel >/dev/null 2>&1; then
+    warn "bazel isn't installed yet, so its cache location can't be checked."
+    echo "         Install bazelisk (see the README's Setup section) and run this again."
 else
-    warn "could not determine the Bazel output base (is bazel installed?)"
+    warn "could not determine the Bazel output base; run \`bazel info output_base\` to see why"
 fi
 
 echo
