@@ -22,7 +22,7 @@
 //! - `run` collects the ids to fire into a `Vec` before touching the write
 //!   queue. That is not a stylistic choice: you cannot hold an immutable
 //!   borrow of `context.abort_configs` and a mutable borrow of
-//!   `context.write_queue` through the same `&mut context` at once. Splitting
+//!   `context.` through the same `&mut context` at once. Splitting
 //!   the read phase from the write phase is the normal way out.
 //! - `?` propagates an error to the caller. `evaluate` can fail, so `run`
 //!   returns `Result` too.
@@ -340,6 +340,33 @@ mod tests {
         let result = operator.run(&mut context);
 
         assert_eq!(result, Err(AbortError::MissingReading(HIGH_CHANNEL)));
+    }
+
+    #[rstest]
+    #[case(2)]
+    #[case(5)]
+    #[case(12)]
+    fn test_run_issues_no_outputs_after_discontinuous_min_cycles(
+        #[case] min_cycles: u16,
+        mut context: LoopContext,
+    ) {
+        context
+            .abort_configs_mut()
+            .insert(ABORT_ID, config_with(Comparison::GreaterThan, min_cycles));
+        let mut operator = AbortOperator::default();
+        operator.run(&mut context).expect("run should succeed");
+        if let Some(config) = context.abort_configs_mut().get_mut(&ABORT_ID) {
+            *config = config_with(Comparison::LessThan, min_cycles);
+        }
+        operator.run(&mut context).expect("run should succeed");
+        if let Some(config) = context.abort_configs_mut().get_mut(&ABORT_ID) {
+            *config = config_with(Comparison::GreaterThan, min_cycles);
+        }
+        for _ in 0..(min_cycles - 1) {
+            operator.run(&mut context).expect("run should succeed");
+        }
+        assert!(context.write_queue.analog_outputs.is_empty());
+        assert!(context.write_queue.digital_outputs.is_empty());
     }
 
     // ------------------------------------------------------------------
