@@ -76,12 +76,21 @@ impl EngineeringUnit {
     ///
     /// Use `MIN_COUNTS` and `MAX_COUNTS` above.
     ///
-    /// TODO(you): implement.
+    /// value = counts * scale + offset
+    /// counts = (value - offset) / scale
     pub fn to_counts(&self, value: f64) -> Option<u16> {
-        // This line only exists so the unimplemented stub compiles without
-        // "unused" errors. Delete it when you implement the function.
-        let _ = (value, MIN_COUNTS, MAX_COUNTS);
-        todo!("ex1: implement EngineeringUnit::to_counts")
+        if self.scale == 0.0 {
+            return None;
+        }
+
+        // Everything is an f64 so I guess we can do floating point math willy nilly
+        let counts: f64 = (value - self.offset) / self.scale;
+
+        // Type casts automatically saturate but we have to use MIN_COUNTS and MAX_COUNTS.
+        // They are floats so we should round before saturating so rounding doesn't
+        // push us past a bound.
+        // https://doc.rust-lang.org/stable/reference/expressions/operator-expr.html#r-expr.as.numeric.float-as-int
+        Some(counts.round().clamp(MIN_COUNTS, MAX_COUNTS) as u16)
     }
 }
 
@@ -90,14 +99,14 @@ impl EngineeringUnit {
 ///
 /// This function works. It is also formatted badly and written in a way clippy
 /// objects to, on purpose. See EXERCISE.md.
-pub fn channel_label(prefix:&String,id:u16)->String{
-    if prefix.len()==0{
+pub fn channel_label(prefix: &str, id: u16) -> String {
+    if prefix.is_empty() {
         return String::from("unknown");
     }
-    let mut label=prefix.to_lowercase();
+    let mut label = prefix.to_lowercase();
     label.push('_');
     label.push_str(&id.to_string());
-    return label;
+    label
 }
 
 #[cfg(test)]
@@ -190,4 +199,45 @@ mod tests {
     // `scale == 0.0` guard in your `to_counts`. If every test still passes,
     // your tests are decoration, not verification. Put the guard back.
     // ------------------------------------------------------------------
+    #[rstest]
+    #[case(-10.0, 0)] // bottom of the ADC range
+    #[case(0.0, 100)] // the calibration's zero crossing
+    #[case(6543.5, 65535)] // top of the ADC range
+    #[case(0.05, 101)] // test rounding up
+    fn test_to_counts_converts_valid_inputs(#[case] value: f64, #[case] expected: u16) {
+        let channel = EngineeringUnit::new(0.1, -10.0);
+
+        let result = channel.to_counts(value).expect("Counts should be valid");
+
+        assert!(result == expected);
+    }
+
+    #[rstest]
+    fn test_to_counts_saturates_bottom() {
+        let channel = EngineeringUnit::new(0.1, -10.0);
+
+        let result = channel.to_counts(-1000.0).expect("Counts should be valid");
+
+        assert!(result == 0);
+    }
+
+    #[rstest]
+    fn test_to_counts_saturates_top() {
+        let channel = EngineeringUnit::new(0.1, -10.0);
+
+        let result = channel
+            .to_counts(1000000000000.0)
+            .expect("Counts should be valid");
+
+        assert!(result == u16::MAX);
+    }
+
+    #[rstest]
+    fn test_channel_label_nonempty() {
+        // No setup
+
+        let label = channel_label("HI", 12);
+
+        assert_eq!(label, "hi_12");
+    }
 }
