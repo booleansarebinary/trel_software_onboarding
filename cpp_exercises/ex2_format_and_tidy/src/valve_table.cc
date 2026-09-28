@@ -3,32 +3,31 @@
 namespace trel::valves {
 
 ValveTable::ValveTable() {
-    entries.push_back(ValveInfo{1, "fuel_main", false});
-    entries.push_back(ValveInfo{2, "ox_main", false});
-    entries.push_back(ValveInfo{3, "fuel_vent", true});
-    entries.push_back(ValveInfo{4, "ox_vent", true});
+    entries_.push_back(ValveInfo{1, "fuel_main", false});
+    entries_.push_back(ValveInfo{2, "ox_main", false});
+    entries_.push_back(ValveInfo{3, "fuel_vent", true});
+    entries_.push_back(ValveInfo{4, "ox_vent", true});
 }
 
-const ValveInfo* ValveTable::FindByName(std::string name) const {
-    for (unsigned long i = 0; i < entries.size(); i++) {
-        if (entries[i].name == name)
-            return &entries[i];
-    }
-    return NULL;
-}
-
-int ValveTable::CountNormallyOpen() const {
-    int Count = 0;
-    for (unsigned long i = 0; i < entries.size(); i++)
-    {
-        if (entries[i].normally_open) {
-            Count = Count + 1;
+const ValveInfo* ValveTable::find_by_name(const std::string& name) const {
+    for (unsigned long i = 0; i < entries_.size(); i++) {
+        if (entries_[i].name == name) {
+            return &entries_[i];
         }
-        else {
+    }
+    return nullptr;
+}
+
+int ValveTable::count_normally_open() const {
+    int count = 0;
+    for (const ValveInfo& info : entries_) {
+        if (info.normally_open) {
+            count = count + 1;
+        } else {
             continue;
         }
     }
-    return Count;
+    return count;
 }
 
 }  // namespace trel::valves
