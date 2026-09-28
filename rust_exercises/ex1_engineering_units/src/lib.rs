@@ -80,24 +80,26 @@ impl EngineeringUnit {
     pub fn to_counts(&self, value: f64) -> Option<u16> {
         // This line only exists so the unimplemented stub compiles without
         // "unused" errors. Delete it when you implement the function.
-        let _ = (value, MIN_COUNTS, MAX_COUNTS);
-        todo!("ex1: implement EngineeringUnit::to_counts")
+        if self.scale == 0.0 {
+            return None;
+        }
+        let counts = value / self.scale - self.offset;
+        Some(counts.clamp(MIN_COUNTS, MAX_COUNTS) as u16)
     }
 }
-
 /// Builds the display label for a channel, like "ai_12". Labels are lowercase
 /// by convention, so the prefix is normalized.
 ///
 /// This function works. It is also formatted badly and written in a way clippy
 /// objects to, on purpose. See EXERCISE.md.
-pub fn channel_label(prefix:&String,id:u16)->String{
-    if prefix.len()==0{
+pub fn channel_label(prefix: &str, id: u16) -> String {
+    if prefix.is_empty() {
         return String::from("unknown");
     }
-    let mut label=prefix.to_lowercase();
+    let mut label = prefix.to_lowercase();
     label.push('_');
     label.push_str(&id.to_string());
-    return label;
+    label
 }
 
 #[cfg(test)]
@@ -159,6 +161,32 @@ mod tests {
 
         assert_eq!(counts, None);
     }
+    #[rstest]
+    fn test_to_counts_when_value_in_range() {
+        let channel = EngineeringUnit::new(0.1, -10.0);
+
+        let counts = channel.to_counts(100.0).unwrap();
+
+        assert_eq!(counts, 1010);
+    }
+
+    #[rstest]
+    fn test_to_counts_when_value_above_range() {
+        let channel = EngineeringUnit::new(0.1, -10.0);
+
+        let counts = channel.to_counts(7000.0).unwrap();
+
+        assert_eq!(counts, MAX_COUNTS as u16);
+    }
+
+    #[rstest]
+    fn test_to_counts_when_value_below_range() {
+        let channel = EngineeringUnit::new(0.1, -10.0);
+
+        let counts = channel.to_counts(-11.0).unwrap();
+
+        assert_eq!(counts, 0);
+    }
 
     #[rstest]
     fn test_channel_label_returns_unknown_when_the_prefix_is_empty() {
@@ -167,6 +195,15 @@ mod tests {
         let label = channel_label(&prefix, 12);
 
         assert_eq!(label, "unknown");
+    }
+
+    #[rstest]
+    fn test_channel_label_returns_label_when_the_prefix_is_not_empty() {
+        let prefix = String::from("Test");
+
+        let label = channel_label(&prefix, 12);
+
+        assert_eq!(label, "test_12");
     }
 
     // ------------------------------------------------------------------

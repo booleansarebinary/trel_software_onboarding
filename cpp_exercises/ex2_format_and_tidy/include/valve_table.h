@@ -7,22 +7,22 @@
 
 namespace trel::valves {
 
-typedef int ValveId;
+using ValveId = int;
 
-struct ValveInfo
-{
+struct ValveInfo {
     ValveId id;
     std::string name;
     bool normally_open;
 };
 
 class ValveTable {
- public:
-  ValveTable();
-  const ValveInfo* FindByName(std::string name) const;
-  int CountNormallyOpen() const;
- private:
-  std::vector<ValveInfo> entries;
+  public:
+    ValveTable();
+    const ValveInfo* find_by_name(const std::string& name) const;
+    int count_normally_open() const;
+
+  private:
+    std::vector<ValveInfo> entries_;
 };
 
 }  // namespace trel::valves
