@@ -33,23 +33,95 @@ TEST(PressureUnits, PsiToKpaMapsZeroToZero) {
     EXPECT_DOUBLE_EQ(kpa, 0.0);
 }
 
-// TODO(you): the two unimplemented functions have no tests. Add them.
-//
-//   kpa_to_psi:
-//     - converts a known value correctly
-//     - round-trips: psi_to_kpa then kpa_to_psi returns the original value
-//       (use EXPECT_NEAR; floating point round trips are not exact)
-//
-//   is_within_tolerance:
-//     - accepts a value inside the band
-//     - rejects a value outside the band
-//     - accepts a value exactly on the boundary, and say in your PR why you
-//       chose inclusive or exclusive
-//     - rejects a negative tolerance_fraction
-//     - expected == 0.0 accepts only exactly 0.0
-//
-// Implement and test one function at a time. Do not write five tests against
-// code that does not compile yet.
+TEST(PressureUnits, KpaToPsiConverts) {
+    const double kpa = 101.325;
+
+    const double psi = kpa_to_psi(kpa);
+
+    EXPECT_NEAR(psi, 14.6959, 1e-3);
+}
+
+TEST(PressureUnits, RoundTripConversion) {
+    double atmospheric_psi = 14.6959;
+
+    const double kpa = psi_to_kpa(atmospheric_psi);
+
+    atmospheric_psi = kpa_to_psi(kpa);
+
+    EXPECT_NEAR(atmospheric_psi, 14.6959, 1e-3);
+}
+
+TEST(PressureUnits, WithinTolerance) {
+    double actual_within = 99.0;
+
+    double expected = 100.0;
+
+    double tolerance = 0.05;
+
+    bool result = is_within_tolerance(actual_within, expected, tolerance);
+
+    EXPECT_TRUE(result);
+}
+
+TEST(PressureUnits, OutsideBand) {
+    double actual_within = 94.5;
+
+    double expected = 100.0;
+
+    double tolerance = 0.05;
+
+    bool result = is_within_tolerance(actual_within, expected, tolerance);
+
+    EXPECT_FALSE(result);
+}
+
+TEST(PressureUnits, OnTolerance) {
+    double actual_within = 105;
+
+    double expected = 100.0;
+
+    double tolerance = 0.05;
+
+    bool result = is_within_tolerance(actual_within, expected, tolerance);
+
+    EXPECT_TRUE(result);
+}
+
+TEST(PressureUnits, NegativeToleranceRejected) {
+    double actual_within = 99.0;
+
+    double expected = 100.0;
+
+    double tolerance = -0.05;
+
+    bool result = is_within_tolerance(actual_within, expected, tolerance);
+
+    EXPECT_FALSE(result);
+}
+
+TEST(PressureUnits, ZeroExpectedReject) {
+    double actual_within = 0.001;
+
+    double expected = 0.0;
+
+    double tolerance = 0.05;
+
+    bool result = is_within_tolerance(actual_within, expected, tolerance);
+
+    EXPECT_FALSE(result);
+}
+
+TEST(PressureUnits, ZeroExpectedAccept) {
+    double actual_within = 0.0;
+
+    double expected = 0.0;
+
+    double tolerance = 0.05;
+
+    bool result = is_within_tolerance(actual_within, expected, tolerance);
+
+    EXPECT_TRUE(result);
+}
 
 }  // namespace
 }  // namespace trel::units
