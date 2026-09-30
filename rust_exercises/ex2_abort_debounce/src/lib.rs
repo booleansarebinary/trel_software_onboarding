@@ -211,6 +211,8 @@ impl AbortOperator {
 
             if condition_met {
                 *cycles += 1;
+            } else {
+                *cycles = 0;
             }
 
             if *cycles >= config.min_cycles {
