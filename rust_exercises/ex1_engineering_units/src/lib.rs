@@ -80,8 +80,15 @@ impl EngineeringUnit {
     pub fn to_counts(&self, value: f64) -> Option<u16> {
         // This line only exists so the unimplemented stub compiles without
         // "unused" errors. Delete it when you implement the function.
-        let _ = (value, MIN_COUNTS, MAX_COUNTS);
-        todo!("ex1: implement EngineeringUnit::to_counts")
+
+        if self.scale == 0.0 {
+            return None;
+        }
+        let result = ((value - self.offset) / self.scale)
+            .round()
+            .clamp(MIN_COUNTS, MAX_COUNTS);
+
+        Some(result as u16)
     }
 }
 
@@ -90,14 +97,14 @@ impl EngineeringUnit {
 ///
 /// This function works. It is also formatted badly and written in a way clippy
 /// objects to, on purpose. See EXERCISE.md.
-pub fn channel_label(prefix:&String,id:u16)->String{
-    if prefix.len()==0{
+pub fn channel_label(prefix: &str, id: u16) -> String {
+    if prefix.is_empty() {
         return String::from("unknown");
     }
-    let mut label=prefix.to_lowercase();
+    let mut label = prefix.to_lowercase();
     label.push('_');
     label.push_str(&id.to_string());
-    return label;
+    label
 }
 
 #[cfg(test)]
@@ -158,6 +165,39 @@ mod tests {
         let counts = channel.to_counts(100.0);
 
         assert_eq!(counts, None);
+    }
+
+    #[rstest]
+    #[case(0.0, 100)]
+    #[case(-10.0, 0)]
+    #[case(-8.5, 15)]
+    fn test_to_counts_converts_to_counts_when_value_in_range(
+        #[case] input: f64,
+        #[case] expected: u16,
+    ) {
+        let channel = EngineeringUnit::new(0.1, -10.0);
+
+        let counts = channel.to_counts(input);
+
+        assert_eq!(counts, Some(expected));
+    }
+
+    #[rstest]
+    fn test_to_counts_saturates_to_zero_when_value_below_range() {
+        let channel = EngineeringUnit::new(0.1, -10.0);
+
+        let counts = channel.to_counts(-100.0);
+
+        assert_eq!(counts, Some(0))
+    }
+
+    #[rstest]
+    fn test_to_counts_saturates_to_max_when_value_above_range() {
+        let channel = EngineeringUnit::new(0.1, -10.0);
+
+        let counts = channel.to_counts(1_000_000.0);
+
+        assert_eq!(counts, Some(u16::MAX));
     }
 
     #[rstest]
