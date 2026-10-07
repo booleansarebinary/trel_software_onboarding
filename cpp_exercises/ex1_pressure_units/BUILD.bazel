@@ -19,6 +19,7 @@ cc_library(
 # header - which is a decent argument for keeping headers small.
 cc_test(
     name = "tests",
+    size = "small",
     srcs = ["tests/pressure_units_test.cc"],
     deps = [
         ":pressure_units",

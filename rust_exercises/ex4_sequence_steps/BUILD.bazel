@@ -3,7 +3,7 @@ load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 package(default_visibility = ["//visibility:public"])
 
 rust_library(
-    name = "abort_debounce",
+    name = "sequence_steps",
     srcs = glob(["src/**/*.rs"]),
     edition = "2024",
 )
@@ -11,7 +11,7 @@ rust_library(
 rust_test(
     name = "tests",
     size = "small",
-    crate = ":abort_debounce",
+    crate = ":sequence_steps",
     edition = "2024",
     deps = ["@crates//:rstest"],
 )
