@@ -46,8 +46,8 @@ fi
 # how you FIX what the build complains about.
 echo "==> rustfmt"
 if [ "$CHECK_ONLY" -eq 1 ]; then
-    # The build IS the check. Note that `bazel build //...` skips targets
-    # tagged `manual`, which is deliberate - see rust_exercises/ex4.
+    # The build IS the check. Note that `bazel build //...` skips any target
+    # tagged `manual`.
     bazel build "${RUST_TARGETS[@]}" >/dev/null
     echo "    rust: formatted"
 else

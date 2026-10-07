@@ -13,6 +13,7 @@ rust_library(
 
 rust_test(
     name = "tests",
+    size = "small",
     crate = ":engineering_units",
     edition = "2024",
     # Dependencies only the tests need go here, not on the library. Shipping a

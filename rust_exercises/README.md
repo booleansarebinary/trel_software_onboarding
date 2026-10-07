@@ -9,6 +9,20 @@ Two exercises, about 45 minutes each. Each one ends in a pull request.
 
 **Do them in order** - the second one assumes the first.
 
+### Extra practice (optional)
+
+Three more, for anyone who wants extra practice with the small Rust building
+blocks the sequence and abort operators are made of. Do 1 and 2 first. These get
+harder as they go, so do them in order too.
+
+| # | Directory | Time | What you do | What it teaches |
+| --- | --- | --- | --- | --- |
+| 3 | `ex3_condition_parsing/` | 20 min | Finish a parser for conditions like `ai_12 > 450.0` | `.parse()`, `strip_prefix`, error enums (with a regex → Rust guide) |
+| 4 | `ex4_sequence_steps/` | 35 min | Step a sequence forward one cycle at a time | Enums that carry data, state machines, `let ... else` |
+| 5 | `ex5_operator_loop/` | 50 min | Run sequence and abort operators in one control loop | Traits, `Box<dyn Trait>`, ordering, why aborts run last |
+
+Each one ends in a pull request like the others.
+
 Try these without AI if you can. It's not forbidden, but you only get fluent with
 the tooling by hitting the errors yourself. If you get stuck, ask one of us. We'd
 much rather answer a question than have you stuck for an hour.
