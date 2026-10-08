@@ -211,6 +211,8 @@ impl AbortOperator {
 
             if condition_met {
                 *cycles += 1;
+            } else {
+                *cycles = 0;
             }
 
             if *cycles >= config.min_cycles {
@@ -343,7 +345,6 @@ mod tests {
     }
 
     // ------------------------------------------------------------------
-    // TODO(you): the tests above pass. They also miss a real bug.
     //
     // Everything above tests a condition that is continuously true or
     // continuously false. Nothing tests the case the whole feature exists
@@ -384,4 +385,41 @@ mod tests {
     // The real ground software has a test with very nearly this name, against
     // a full expression engine. You will recognize it when you get there.
     // ------------------------------------------------------------------
+
+    // High channel > low channel
+    #[rstest]
+    #[case(2)]
+    #[case(5)]
+    #[case(12)]
+    fn test_run_issues_no_outputs_after_discontinuous_min_cycles(
+        #[case] min_cycles: u16,
+        mut context: LoopContext,
+    ) {
+        context
+            .abort_configs_mut()
+            .insert(ABORT_ID, config_with(Comparison::GreaterThan, min_cycles));
+        let mut operator = AbortOperator::default();
+
+        //   - run one cycle with a GreaterThan condition (true)
+        operator.run(&mut context).expect("run should succeed");
+
+        //   - swap the stored AbortConfig to LessThan and run one cycle (false)
+        if let Some(config) = context.abort_configs_mut().get_mut(&ABORT_ID) {
+            *config = config_with(Comparison::LessThan, min_cycles);
+        }
+        operator.run(&mut context).expect("run should succeed");
+
+        //   - swap it back to GreaterThan and run min_cycles - 1 more cycles
+        if let Some(config) = context.abort_configs_mut().get_mut(&ABORT_ID) {
+            *config = config_with(Comparison::GreaterThan, min_cycles);
+        }
+        for _ in 0..(min_cycles - 1) {
+            operator.run(&mut context).expect("run should succeed");
+        }
+
+        //   assert the write queue is empty
+        let command = context.device_write_queue().flush_to_composite_command();
+        assert!(command.analog_outputs.is_empty());
+        assert!(command.digital_outputs.is_empty());
+    }
 }
