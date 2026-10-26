@@ -37,8 +37,6 @@ TREL software is export-controlled. So keep the following in mind when you get a
 **4. The Bazel cache counts too.** Bazel keeps an *output base* full of compiled
 copies of repo sources (`bazel info output_base`). So this needs to be local too.
 
-**A note on AI use:** For now, leadership has okayed using AI to help code. In the future, when software becomes more maintenance work, we might be able to look into creating local models for TREL to use.
-
 ## Setup
 
 macOS or Linux. On Windows, use WSL.
